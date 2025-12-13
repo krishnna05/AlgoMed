@@ -1,5 +1,5 @@
 const ChatLog = require('../models/ChatLog'); 
-const getOpenAIAPIResponse = require('../utils/openai'); 
+const getGeminiResponse = require('../utils/gemini'); 
 
 const processAIChat = async (req, res, next) => {
     try {
@@ -21,7 +21,7 @@ const processAIChat = async (req, res, next) => {
         if (!chatLog) {
             chatLog = await ChatLog.create({
                 userId: req.user.id,
-                title: message.substring(0, 30) + "...", // Generate a simple title
+                title: message.substring(0, 30) + "...", 
                 messages: []
             });
         }
@@ -29,8 +29,8 @@ const processAIChat = async (req, res, next) => {
         // 3. Add User Message to History
         chatLog.messages.push({ role: "user", content: message });
 
-        // 4. Get Response from OpenAI
-        const aiReply = await getOpenAIAPIResponse(message);
+        // 4. Get Response from AI (Updated function call)
+        const aiReply = await getGeminiResponse(message);
 
         // 5. Add AI Message to History
         chatLog.messages.push({ role: "assistant", content: aiReply });
@@ -56,7 +56,7 @@ const getUserThreads = async (req, res, next) => {
     try {
         const threads = await ChatLog.find({ userId: req.user.id })
             .sort({ updatedAt: -1 })
-            .select('title updatedAt'); // Only fetch necessary fields
+            .select('title updatedAt'); 
 
         res.status(200).json({
             success: true,

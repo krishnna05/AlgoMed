@@ -1,4 +1,4 @@
-const User = require('../models/user');
+const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -11,7 +11,8 @@ const generateToken = (id, role) => {
 
 const register = async (req, res, next) => {
     try {
-        const { name, email, password, role, gender, phone } = req.body;
+        // SECURITY FIX: Removed 'role' from req.body destructuring to prevent manipulation
+        const { name, email, password, gender, phone } = req.body;
 
         // Check if user already exists
         const userExists = await User.findOne({ email });
@@ -30,7 +31,7 @@ const register = async (req, res, next) => {
             name,
             email,
             password: hashedPassword,
-            role: role || 'patient', // Default to patient if not specified
+            role: 'patient', 
             gender,
             phone
         });
