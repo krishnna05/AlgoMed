@@ -70,4 +70,4 @@ const patientProfileSchema = new mongoose.Schema({
     timestamps: true
 });
 
-module.exports = mongoose.model('PatientProfile', patientProfileSchema);
+module.exports = mongoose.models.PatientProfile || mongoose.model('PatientProfile', patientProfileSchema);
