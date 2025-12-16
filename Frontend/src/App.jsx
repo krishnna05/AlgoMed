@@ -1,35 +1,67 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Layouts & Components
+import DashboardLayout from './layouts/DashboardLayout';
+import PrivateRoute from './components/PrivateRoute';
 
+// Pages
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import DoctorDashboard from './pages/DoctorDashboard';
+import PatientDashboard from './pages/PatientDashboard';
+import FindDoctors from './pages/FindDoctors';
+import MyAppointments from './pages/MyAppointments';
+import DoctorProfile from './pages/DoctorProfile';
+import PatientProfile from './pages/PatientProfile';
+
+const HomeRedirect = () => {
+  const { user, loading } = useAuth();
+  if (loading) return <div>Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  return <Navigate to={user.role === 'doctor' ? '/doctor' : '/patient'} replace />;
+};
+
+const App = () => {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* --- Public Routes --- */}
+          <Route path="/login" element={<Login />} />
+          
+          {/* --- Signup Routes --- */}
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/signup/patient" element={<Signup />} />
+          <Route path="/signup/doctor" element={<Signup />} />
+          
+          <Route path="/" element={<HomeRedirect />} />
 
-export default App
+          {/* --- Protected Doctor Routes --- */}
+          <Route element={<PrivateRoute allowedRoles={['doctor']} />}>
+            <Route element={<DashboardLayout />}>
+              <Route path="/doctor" element={<DoctorDashboard />} />
+              <Route path="/doctor/appointments" element={<MyAppointments />} />
+              <Route path="/doctor/profile" element={<DoctorProfile />} />
+            </Route>
+          </Route>
+
+          {/* --- Protected Patient Routes --- */}
+          <Route element={<PrivateRoute allowedRoles={['patient']} />}>
+            <Route element={<DashboardLayout />}>
+              <Route path="/patient" element={<PatientDashboard />} />
+              <Route path="/patient/find-doctors" element={<FindDoctors />} />
+              <Route path="/patient/appointments" element={<MyAppointments />} />
+              <Route path="/patient/profile" element={<PatientProfile />} />
+            </Route>
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+};
+
+export default App;

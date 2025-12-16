@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api', // Matches my Backend/server.js PORT
+  baseURL: 'http://localhost:8080/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -30,7 +30,13 @@ export const loginUser = async (credentials) => {
 };
 
 export const registerUser = async (userData) => {
-  const response = await api.post('/auth/register', userData);
+  let endpoint = '/auth/register-patient'; 
+  
+  if (userData.role === 'doctor') {
+    endpoint = '/auth/register-doctor';
+  }
+
+  const response = await api.post(endpoint, userData);
   return response.data;
 };
 
@@ -76,6 +82,11 @@ export const updateAppointmentStatus = async (id, data) => {
   return response.data;
 };
 
+export const completeConsultation = async (id, data) => {
+  const response = await api.put(`/appointments/${id}/consultation`, data);
+  return response.data;
+};
+
 // 4. Chat/AI Services
 export const sendChatMessage = async (message, threadId = null) => {
   const response = await api.post('/chat', { message, threadId });
@@ -94,6 +105,38 @@ export const getThreadMessages = async (threadId) => {
 
 export const deleteThread = async (threadId) => {
   const response = await api.delete(`/chat/thread/${threadId}`);
+  return response.data;
+};
+
+// 5. Patient Profile Services
+export const getPatientProfile = async () => {
+  const response = await api.get('/patients/profile/me');
+  return response.data;
+};
+
+export const updatePatientProfile = async (profileData) => {
+  const response = await api.put('/patients/profile', profileData);
+  return response.data;
+};
+
+export const getPatientSummary = async (patientId) => {
+  const response = await api.get(`/patients/${patientId}/summary`);
+  return response.data;
+};
+
+export const getPatientVitalsHistory = async (patientId) => {
+  const response = await api.get(`/patients/${patientId}/vitals`);
+  return response.data;
+};
+
+// 6. Clinical AI & Analytics
+export const generateSOAPNotes = async (text, context) => {
+  const response = await api.post('/ai/generate-soap', { text, ...context });
+  return response.data;
+};
+
+export const getDoctorAnalytics = async () => {
+  const response = await api.get('/analytics/doctor');
   return response.data;
 };
 
