@@ -1,5 +1,6 @@
 const Appointment = require('../models/Appointment');
 const User = require('../models/User');
+const PatientProfile = require('../models/PatientProfile'); // Import Profile
 
 const bookAppointment = async (req, res, next) => {
     try {
@@ -69,10 +70,45 @@ const getMyAppointments = async (req, res, next) => {
             .populate('doctorId', 'name email') 
             .sort({ appointmentDate: 1, timeSlot: 1 }); // Sort by date ascending
 
+        const enrichedAppointments = await Promise.all(appointments.map(async (appt) => {
+            const apptObj = appt.toObject();
+            
+            // Only perform risk check if user is a doctor and patient exists
+            if (req.user.role === 'doctor' && appt.patientId) {
+                // Fetch profile to check conditions
+                const profile = await PatientProfile.findOne({ userId: appt.patientId._id })
+                                    .select('medicalHistory allergies');
+                
+                let isHighRisk = false;
+                let riskFactors = [];
+
+                if (profile) {
+                    // Check for Active Conditions
+                    const activeConditions = profile.medicalHistory?.filter(c => c.status === 'Active') || [];
+                    if (activeConditions.length > 0) {
+                        isHighRisk = true;
+                        riskFactors.push(...activeConditions.map(c => c.condition));
+                    }
+                    
+                    // Check for Severe Allergies
+                    const severeAllergies = profile.allergies?.filter(a => a.severity === 'Severe') || [];
+                    if (severeAllergies.length > 0) {
+                        isHighRisk = true;
+                        riskFactors.push("Severe Allergies");
+                    }
+                }
+                
+                apptObj.riskTag = isHighRisk ? 'High Risk' : 'Routine';
+                apptObj.riskFactors = riskFactors;
+            }
+
+            return apptObj;
+        }));
+
         res.status(200).json({
             success: true,
-            count: appointments.length,
-            data: appointments
+            count: enrichedAppointments.length,
+            data: enrichedAppointments
         });
 
     } catch (error) {
@@ -116,8 +152,59 @@ const updateAppointmentStatus = async (req, res, next) => {
     }
 };
 
+const completeConsultation = async (req, res, next) => {
+    try {
+        const appointmentId = req.params.id;
+        const { 
+            doctorNotes, 
+            diagnosis, 
+            prescription, 
+            vitals,
+            outcome 
+        } = req.body;
+
+        const appointment = await Appointment.findById(appointmentId);
+
+        if (!appointment) {
+            res.status(404);
+            throw new Error('Appointment not found');
+        }
+
+        // Security: Ensure the logged-in doctor owns this appointment
+        if (appointment.doctorId.toString() !== req.user.id) {
+            res.status(403);
+            throw new Error('Not authorized to manage this appointment');
+        }
+
+        // Update Fields
+        appointment.doctorNotes = doctorNotes || appointment.doctorNotes;
+        appointment.diagnosis = diagnosis || appointment.diagnosis;
+        appointment.prescription = prescription || appointment.prescription;
+        appointment.outcome = outcome || appointment.outcome; // Save Outcome
+        
+        if (vitals) {
+            appointment.vitals = { ...appointment.vitals, ...vitals };
+        }
+
+        // Mark as Completed
+        appointment.status = 'Completed';
+        
+        const updatedAppointment = await appointment.save();
+
+        res.status(200).json({
+            success: true,
+            data: updatedAppointment,
+            message: "Consultation completed successfully"
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     bookAppointment,
     getMyAppointments,
-    updateAppointmentStatus
+    updateAppointmentStatus,
+    completeConsultation
 };

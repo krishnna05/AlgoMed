@@ -8,22 +8,20 @@ const appointmentSchema = new mongoose.Schema({
     },
     doctorId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // Referencing User (who has role 'doctor')
+        ref: 'User',
         required: true
     },
     appointmentDate: {
         type: Date,
         required: [true, 'Please select a date']
     },
-
-    // Storing time as a string for simplicity for example "10:30 AM"
     timeSlot: {
         type: String,
         required: [true, 'Please select a time slot']
     },
     status: {
         type: String,
-        enum: ['Scheduled', 'Completed', 'Cancelled', 'No-show'],
+        enum: ['Scheduled', 'In-Progress', 'Completed', 'Cancelled', 'No-show'],
         default: 'Scheduled'
     },
     type: {
@@ -31,22 +29,29 @@ const appointmentSchema = new mongoose.Schema({
         enum: ['Online', 'Offline'],
         default: 'Online'
     },
-    // For storing the reason for visit entered by patient
     reason: {
         type: String,
-        required: [true, 'Please enter a reason for visit']
+        required: true
     },
-    // Notes added by Doctor after/during visit
-    doctorNotes: {
-        type: String,
-        default: ""
+    // --- Clinical Data ---
+    doctorNotes: { type: String, default: "" },
+    diagnosis: { type: String, default: "" },
+    prescription: { type: String, default: "" },
+
+    outcome: { 
+        type: String, 
+        enum: ['Improved', 'Stable', 'Worsening', 'Referral', 'Pending'],
+        default: 'Pending'
     },
-    // Link for video call (generated later)
-    videoLink: {
-        type: String,
-        default: ""
+
+    vitals: {
+        bp: { type: String, default: "" },
+        temp: { type: String, default: "" },
+        weight: { type: String, default: "" },
+        pulse: { type: String, default: "" }
     },
-    // Link to an actual prescription/medical record created after the visit
+    
+    videoLink: { type: String, default: "" },
     medicalRecordId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'MedicalRecord' 
