@@ -4,8 +4,11 @@ const User = require('../models/User');
 const PatientProfile = require('../models/PatientProfile');
 const DoctorProfile = require('../models/DoctorProfile');
 const Appointment = require('../models/Appointment');
-const ChatLog = require('../models/ChatLog');
+const ChatLog = require('../models/ChatLog'); // Don't forget to clear chats too
 
+// @desc    Reset Database to Default Demo State
+// @route   POST /api/reset
+// @access  Public (For Demo Purposes)
 const resetDatabase = async (req, res, next) => {
     try {
         console.log('🔄 Demo Reset Triggered...');
@@ -18,6 +21,7 @@ const resetDatabase = async (req, res, next) => {
         await ChatLog.deleteMany({});
 
         // 2. Re-Seed Users
+        // Hash password (using fixed salt for speed/consistency in demo)
         const passwordHash = await bcrypt.hash('password123', 10);
 
         // --- Create Doctor ---
@@ -52,7 +56,7 @@ const resetDatabase = async (req, res, next) => {
         const patientC = await User.create({ name: "Mike Minor", email: "mike@test.com", password: passwordHash, role: "patient", gender: "Male", phone: "9876543212" });
 
         // --- Create Medical Profiles ---
-        // Akshay (Diabetes)
+        // John (Diabetes)
         await PatientProfile.create({
             userId: patientA._id,
             dateOfBirth: new Date("1980-01-01"),
@@ -64,7 +68,7 @@ const resetDatabase = async (req, res, next) => {
             currentMedications: [{ name: "Metformin", dosage: "500mg", frequency: "Twice daily" }]
         });
 
-        // Vani (Allergy)
+        // Sarah (Allergy)
         await PatientProfile.create({
             userId: patientB._id,
             dateOfBirth: new Date("1995-05-15"),
@@ -76,7 +80,7 @@ const resetDatabase = async (req, res, next) => {
             currentMedications: []
         });
 
-        // Sara (Healthy)
+        // Mike (Healthy)
         await PatientProfile.create({
             userId: patientC._id,
             dateOfBirth: new Date("2000-10-10"),
