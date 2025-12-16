@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; 
+import React, { useState, useEffect } from 'react'; // <--- Added useEffect here
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -14,6 +14,8 @@ const Login = () => {
   const navigate = useNavigate();
 
   // --- DEMO RESET TRIGGER ---
+  // This resets the database every time a user lands on the Login page.
+  // This ensures every new demo starts fresh.
   useEffect(() => {
     const resetDemo = async () => {
         try {
@@ -25,6 +27,7 @@ const Login = () => {
     };
     resetDemo();
   }, []);
+  // ---------------------------
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
