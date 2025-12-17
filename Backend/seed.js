@@ -29,9 +29,9 @@ const seedData = async () => {
     console.log('👨‍⚕️ Creating Doctor...');
     const doctorSalt = await bcrypt.genSalt(10);
     const doctorHash = await bcrypt.hash('password123', doctorSalt);
-    
+
     const doctor = await User.create({
-        name: "Dr. Alex Admin",
+        name: "Admin",
         email: "doctor@algomed.com",
         password: doctorHash,
         role: "doctor",
@@ -54,49 +54,48 @@ const seedData = async () => {
     const patientHash = await bcrypt.hash('password123', patientSalt);
 
     // Patient A: High Risk (Diabetes) + History
-    const patientA = await User.create({ name: "John Doe", email: "john@test.com", password: patientHash, role: "patient", gender: "Male", phone: "9876543210" });
-    
+    const patientA = await User.create({ name: "Akshay Khanna", email: "akshay@test.com", password: patientHash, role: "patient", gender: "Male", phone: "9876543210" });
+
     // Patient B: High Risk (Severe Peanut Allergy)
-    const patientB = await User.create({ name: "Sarah Smith", email: "sarah@test.com", password: patientHash, role: "patient", gender: "Female", phone: "9876543211" });
+    const patientB = await User.create({ name: "Vani Kapoor", email: "vani@test.com", password: patientHash, role: "patient", gender: "Female", phone: "9876543211" });
 
     // Patient C: Routine
-    const patientC = await User.create({ name: "Mike Minor", email: "mike@test.com", password: patientHash, role: "patient", gender: "Male", phone: "9876543212" });
-
+    const patientC = await User.create({ name: "Sara Chauhan", email: "sara@test.com", password: patientHash, role: "patient", gender: "Male", phone: "9876543212" });
 
     // --- 3. Create Patient Profiles (Clinical Intelligence) ---
     console.log('📋 Creating Medical Profiles...');
-    
-    // John's Profile (High Risk Condition)
+
+    // Akshay's Profile (High Risk Condition)
     await PatientProfile.create({
         userId: patientA._id,
         dateOfBirth: new Date("1980-01-01"),
         bloodGroup: "O+",
-        height: "175 cm",
-        weight: "85 kg",
+        height: 175,
+        weight: 85,
         medicalHistory: [{ condition: "Diabetes Type 2", diagnosisDate: new Date("2020-01-01"), status: "Active" }],
         allergies: [],
         currentMedications: [{ name: "Metformin", dosage: "500mg", frequency: "Twice daily" }]
     });
 
-    // Sarah's Profile (Severe Allergy)
+    // Vani's Profile (Severe Allergy)
     await PatientProfile.create({
         userId: patientB._id,
         dateOfBirth: new Date("1995-05-15"),
         bloodGroup: "A-",
-        height: "162 cm",
-        weight: "60 kg",
+        height: 162,
+        weight: 60,
         medicalHistory: [],
         allergies: [{ allergen: "Peanuts", severity: "Severe", reaction: "Anaphylaxis" }],
         currentMedications: []
     });
 
-    // Mike's Profile (Healthy)
+    // Sara's Profile (Healthy)
     await PatientProfile.create({
         userId: patientC._id,
         dateOfBirth: new Date("2000-10-10"),
         bloodGroup: "B+",
-        height: "180 cm",
-        weight: "75 kg",
+        height: 180,
+        weight: 75,
         medicalHistory: [],
         allergies: [],
         currentMedications: []
@@ -112,43 +111,43 @@ const seedData = async () => {
     const lastMonth = new Date(today); lastMonth.setDate(lastMonth.getDate() - 30);
 
     const appointments = [
-        // --- HISTORY FOR ANALYTICS & GRAPHS (John Doe) ---
+        // --- HISTORY FOR ANALYTICS & GRAPHS (Akshay) ---
         {
             patientId: patientA._id, doctorId: doctor._id,
             appointmentDate: lastMonth, timeSlot: "10:00 AM", status: "Completed", type: "Online",
             reason: "Regular Checkup", outcome: "Stable",
-            doctorNotes: "Patient monitoring sugar levels.", 
+            doctorNotes: "Patient monitoring sugar levels.",
             vitals: { bp: "130/85", weight: "88", pulse: "78", temp: "98.6" }
         },
         {
             patientId: patientA._id, doctorId: doctor._id,
             appointmentDate: twoWeeksAgo, timeSlot: "10:00 AM", status: "Completed", type: "Offline",
             reason: "Sugar fluctuations", outcome: "Worsening",
-            doctorNotes: "Advised diet changes.", 
+            doctorNotes: "Advised diet changes.",
             vitals: { bp: "135/90", weight: "87", pulse: "82", temp: "98.4" }
         },
         {
             patientId: patientA._id, doctorId: doctor._id,
             appointmentDate: lastWeek, timeSlot: "10:00 AM", status: "Completed", type: "Online",
             reason: "Follow up", outcome: "Improved",
-            doctorNotes: "Levels looking better.", 
+            doctorNotes: "Levels looking better.",
             vitals: { bp: "125/82", weight: "86", pulse: "76", temp: "98.5" }
         },
 
         // --- TODAY'S SCHEDULE (Doctor Dashboard) ---
-        // 1. High Risk (John - Diabetes)
+        // 1. High Risk (Akshay - Diabetes)
         {
             patientId: patientA._id, doctorId: doctor._id,
             appointmentDate: today, timeSlot: "09:00 AM", status: "Scheduled", type: "Online",
             reason: "Monthly Review",
         },
-        // 2. High Risk (Sarah - Allergy)
+        // 2. High Risk (Vani - Allergy)
         {
             patientId: patientB._id, doctorId: doctor._id,
             appointmentDate: today, timeSlot: "10:00 AM", status: "Scheduled", type: "Offline",
             reason: "Skin rash consultation",
         },
-        // 3. Routine (Mike - Pending)
+        // 3. Routine (Sara - Pending)
         {
             patientId: patientC._id, doctorId: doctor._id,
             appointmentDate: today, timeSlot: "11:00 AM", status: "Scheduled", type: "Online",

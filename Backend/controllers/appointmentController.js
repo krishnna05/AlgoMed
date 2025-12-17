@@ -1,6 +1,6 @@
 const Appointment = require('../models/Appointment');
 const User = require('../models/User');
-const PatientProfile = require('../models/PatientProfile'); // Import Profile
+const PatientProfile = require('../models/PatientProfile'); 
 
 const bookAppointment = async (req, res, next) => {
     try {
@@ -72,9 +72,7 @@ const getMyAppointments = async (req, res, next) => {
 
         const enrichedAppointments = await Promise.all(appointments.map(async (appt) => {
             const apptObj = appt.toObject();
-            
-            // Only perform risk check if user is a doctor and patient exists
-            if (req.user.role === 'doctor' && appt.patientId) {
+            if (req.user.role === 'doctor' && appt.patientId && appt.patientId._id) {
                 // Fetch profile to check conditions
                 const profile = await PatientProfile.findOne({ userId: appt.patientId._id })
                                     .select('medicalHistory allergies');
@@ -100,6 +98,10 @@ const getMyAppointments = async (req, res, next) => {
                 
                 apptObj.riskTag = isHighRisk ? 'High Risk' : 'Routine';
                 apptObj.riskFactors = riskFactors;
+            } else {
+                // Fallback if patient data is missing
+                apptObj.riskTag = 'Routine';
+                apptObj.riskFactors = [];
             }
 
             return apptObj;

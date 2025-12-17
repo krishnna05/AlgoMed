@@ -4,11 +4,8 @@ const User = require('../models/User');
 const PatientProfile = require('../models/PatientProfile');
 const DoctorProfile = require('../models/DoctorProfile');
 const Appointment = require('../models/Appointment');
-const ChatLog = require('../models/ChatLog'); // Don't forget to clear chats too
+const ChatLog = require('../models/ChatLog');
 
-// @desc    Reset Database to Default Demo State
-// @route   POST /api/reset
-// @access  Public (For Demo Purposes)
 const resetDatabase = async (req, res, next) => {
     try {
         console.log('🔄 Demo Reset Triggered...');
@@ -26,7 +23,7 @@ const resetDatabase = async (req, res, next) => {
 
         // --- Create Doctor ---
         const doctor = await User.create({
-            name: "Dr. Alex Admin",
+            name: "Admin",
             email: "doctor@algomed.com",
             password: passwordHash,
             role: "doctor",
@@ -51,12 +48,12 @@ const resetDatabase = async (req, res, next) => {
         });
 
         // --- Create Patients ---
-        const patientA = await User.create({ name: "John Doe", email: "john@test.com", password: passwordHash, role: "patient", gender: "Male", phone: "9876543210" });
-        const patientB = await User.create({ name: "Sarah Smith", email: "sarah@test.com", password: passwordHash, role: "patient", gender: "Female", phone: "9876543211" });
-        const patientC = await User.create({ name: "Mike Minor", email: "mike@test.com", password: passwordHash, role: "patient", gender: "Male", phone: "9876543212" });
+        const patientA = await User.create({ name: "Akshay Khanna", email: "akshay@test.com", password: passwordHash, role: "patient", gender: "Male", phone: "9876543210" });
+        const patientB = await User.create({ name: "Vani Kapoor", email: "vani@test.com", password: passwordHash, role: "patient", gender: "Female", phone: "9876543211" });
+        const patientC = await User.create({ name: "Sara Chauhan", email: "sara@test.com", password: passwordHash, role: "patient", gender: "Female", phone: "9876543212" });
 
         // --- Create Medical Profiles ---
-        // John (Diabetes)
+        // Akshay (Diabetes)
         await PatientProfile.create({
             userId: patientA._id,
             dateOfBirth: new Date("1980-01-01"),
@@ -68,7 +65,7 @@ const resetDatabase = async (req, res, next) => {
             currentMedications: [{ name: "Metformin", dosage: "500mg", frequency: "Twice daily" }]
         });
 
-        // Sarah (Allergy)
+        // Vani (Allergy)
         await PatientProfile.create({
             userId: patientB._id,
             dateOfBirth: new Date("1995-05-15"),
@@ -80,7 +77,7 @@ const resetDatabase = async (req, res, next) => {
             currentMedications: []
         });
 
-        // Mike (Healthy)
+        // Sara (Healthy)
         await PatientProfile.create({
             userId: patientC._id,
             dateOfBirth: new Date("2000-10-10"),
