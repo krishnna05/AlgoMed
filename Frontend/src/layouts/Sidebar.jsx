@@ -23,17 +23,37 @@ const Sidebar = () => {
     height: '80px',
     display: 'flex',
     alignItems: 'center',
-    padding: '0 24px',
+    padding: '0 28px', // Slightly increased padding
     borderBottom: '1px solid #f1f5f9'
   };
 
-  const logoText = {
-    fontSize: '1.5rem',
-    fontWeight: '700',
-    color: '#3b82f6',
+  // --- Logo Styles ---
+  const logoWrapper = {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px'
+    gap: '12px'
+  };
+
+  const logoIconBox = {
+    width: '38px',
+    height: '38px',
+    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', // Modern blue gradient
+    borderRadius: '10px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#ffffff',
+    fontSize: '1.25rem',
+    boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)', // Soft shadow/glow
+    flexShrink: 0
+  };
+
+  const logoTypography = {
+    fontSize: '1.4rem',
+    fontWeight: '800',
+    color: '#0f172a', 
+    letterSpacing: '-0.025em',
+    lineHeight: 1
   };
 
   const menuContainer = {
@@ -83,8 +103,13 @@ const Sidebar = () => {
   return (
     <aside style={sidebarStyle}>
       <div style={logoContainer}>
-        <div style={logoText}>
-          ⚡ AlgoMed
+        <div style={logoWrapper}>
+          <div style={logoIconBox}>
+            <FiActivity />
+          </div>
+          <div style={logoTypography}>
+            Algo<span style={{ color: '#3b82f6' }}>Med</span>
+          </div>
         </div>
       </div>
 
@@ -107,7 +132,7 @@ const Sidebar = () => {
 
       <div style={footerContainer}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '12px' }}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+          <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem' }}>
             {user?.name?.charAt(0) || 'U'}
           </div>
           <div style={{ overflow: 'hidden' }}>

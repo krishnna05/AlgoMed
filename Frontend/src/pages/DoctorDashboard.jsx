@@ -1,21 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getMyAppointments, getDoctorProfileMe, getDoctorAnalytics } from '../services/api';
-import { FiUsers, FiCalendar, FiClock, FiActivity, FiMoreHorizontal, FiAlertTriangle, FiCheckCircle, FiPlay, FiFileText, FiPieChart, FiGrid, FiAward, FiStar } from 'react-icons/fi';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { FiClock, FiAlertTriangle, FiCheckCircle, FiPlay, FiGrid, FiPieChart, FiAward, FiStar, FiInfo, FiXCircle, FiVideo, FiMapPin } from 'react-icons/fi';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import PatientSnapshotDrawer from '../components/PatientSnapshotDrawer';
 import ConsultationModal from '../components/ConsultationModal';
 
 const DoctorDashboard = () => {
     const { user } = useAuth();
-    const [viewMode, setViewMode] = useState('overview'); // 'overview' | 'analytics'
+    const [viewMode, setViewMode] = useState('overview'); 
     
     // Data State
     const [todayAppointments, setTodayAppointments] = useState([]);
     const [priorityStats, setPriorityStats] = useState({ highRisk: 0, pending: 0, routine: 0 });
     const [analyticsData, setAnalyticsData] = useState(null);
-    const [profileComplete, setProfileComplete] = useState(true);
     const [loading, setLoading] = useState(true);
 
     // Modals
@@ -29,30 +27,37 @@ const DoctorDashboard = () => {
 
     const fetchDashboardData = async () => {
         try {
-            const profileRes = await getDoctorProfileMe();
-            if (!profileRes.data) setProfileComplete(false);
+            await getDoctorProfileMe();
 
             // Fetch Appointments
             const apptRes = await getMyAppointments();
             const allAppts = apptRes.data || [];
             
-            // Filter Today
+            // Filter Today & Remove Duplicates
             const today = new Date().toDateString();
-            const todaysList = allAppts.filter(appt =>
+            
+            // 1. Filter for today and active status
+            let todaysList = allAppts.filter(appt =>
                 new Date(appt.appointmentDate).toDateString() === today &&
                 appt.status !== 'Cancelled'
             );
-            todaysList.sort((a, b) => a.timeSlot.localeCompare(b.timeSlot));
-            setTodayAppointments(todaysList);
 
-            // Priority Logic
+            // 2. Remove Duplicates 
+            const uniqueAppts = Array.from(new Map(todaysList.map(item => [item._id, item])).values());
+
+            // 3. Sort by Time Slot
+            uniqueAppts.sort((a, b) => a.timeSlot.localeCompare(b.timeSlot));
+            
+            setTodayAppointments(uniqueAppts);
+
+            // Priority Logic 
             setPriorityStats({
-                highRisk: todaysList.filter(a => a.riskTag === 'High Risk').length,
-                pending: todaysList.filter(a => a.status === 'Scheduled').length,
-                routine: todaysList.filter(a => a.riskTag !== 'High Risk').length
+                highRisk: uniqueAppts.filter(a => a.riskTag === 'High Risk').length,
+                pending: uniqueAppts.filter(a => a.status === 'Scheduled').length,
+                routine: uniqueAppts.filter(a => a.riskTag !== 'High Risk').length
             });
 
-            // Fetch Analytics (Pre-load)
+            // Fetch Analytics 
             const analyticsRes = await getDoctorAnalytics();
             setAnalyticsData(analyticsRes.data);
 
@@ -93,65 +98,128 @@ const DoctorDashboard = () => {
     const AnalyticsPanel = () => {
         if (!analyticsData) return <div>Loading Stats...</div>;
 
-        const pieData = [
-            { name: 'Completed', value: analyticsData.breakdown.completed },
-            { name: 'Scheduled', value: analyticsData.breakdown.scheduled },
-            { name: 'Cancelled', value: analyticsData.breakdown.cancelled },
-        ];
-        const COLORS = ['#10b981', '#3b82f6', '#ef4444'];
+        // Calculate Percentages for Text View
+        const total = analyticsData.totalAppointments || 1; 
+        const completedPct = Math.round((analyticsData.breakdown.completed / total) * 100);
+        const scheduledPct = Math.round((analyticsData.breakdown.scheduled / total) * 100);
+        const cancelledPct = Math.round((analyticsData.breakdown.cancelled / total) * 100);
 
         return (
             <div style={{ animation: 'fadeIn 0.5s' }}>
+                {/* Metric Cards */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '30px' }}>
-                    <div className="card" style={{ textAlign: 'center' }}>
+                    
+                    {/* Unique Patients -> Total Patient Base */}
+                    <div className="card" style={{ textAlign: 'center', position: 'relative' }}>
+                        <div style={{ position: 'absolute', top: 10, right: 10, color: '#94a3b8' }} title="Number of distinct individuals you have treated">
+                            <FiInfo size={14} />
+                        </div>
                         <h3 style={{ fontSize: '2.5rem', color: '#3b82f6', margin: 0 }}>{analyticsData.totalPatients}</h3>
-                        <p style={{ color: '#64748b' }}>Unique Patients</p>
+                        <p style={{ color: '#1e293b', fontWeight: '600', marginBottom: '4px' }}>Total Patient Base</p>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Distinct Individuals Treated</p>
                     </div>
-                    <div className="card" style={{ textAlign: 'center' }}>
+
+                    {/* Total Visits -> Total Consultations */}
+                    <div className="card" style={{ textAlign: 'center', position: 'relative' }}>
+                        <div style={{ position: 'absolute', top: 10, right: 10, color: '#94a3b8' }} title="Total number of appointments (completed + scheduled)">
+                            <FiInfo size={14} />
+                        </div>
                         <h3 style={{ fontSize: '2.5rem', color: '#10b981', margin: 0 }}>{analyticsData.totalAppointments}</h3>
-                        <p style={{ color: '#64748b' }}>Total Visits</p>
+                        <p style={{ color: '#1e293b', fontWeight: '600', marginBottom: '4px' }}>Total Consultations</p>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>All Completed Appointments</p>
                     </div>
-                    <div className="card" style={{ textAlign: 'center' }}>
+
+                    {/* Online/Offline -> Consultation Mode */}
+                    <div className="card" style={{ textAlign: 'center', position: 'relative' }}>
+                        <div style={{ position: 'absolute', top: 10, right: 10, color: '#94a3b8' }} title="Split between video calls and physical visits">
+                            <FiInfo size={14} />
+                        </div>
                         <h3 style={{ fontSize: '2.5rem', color: '#f59e0b', margin: 0 }}>
                             {analyticsData.visitTypes.online} <span style={{fontSize: '1rem', color:'#ccc'}}>/</span> {analyticsData.visitTypes.offline}
                         </h3>
-                        <p style={{ color: '#64748b' }}>Online / Offline</p>
+                        <p style={{ color: '#1e293b', fontWeight: '600', marginBottom: '4px' }}>Consultation Mode</p>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Virtual / In-Clinic Split</p>
                     </div>
-                    <div className="card" style={{ textAlign: 'center' }}>
+
+                    {/* Satisfaction -> Patient Satisfaction */}
+                    <div className="card" style={{ textAlign: 'center', position: 'relative' }}>
+                         <div style={{ position: 'absolute', top: 10, right: 10, color: '#94a3b8' }} title="Average rating from patient feedback surveys">
+                            <FiInfo size={14} />
+                        </div>
                         <h3 style={{ fontSize: '2.5rem', color: '#8b5cf6', margin: 0 }}>98%</h3>
-                        <p style={{ color: '#64748b' }}>Satisfaction</p>
+                        <p style={{ color: '#1e293b', fontWeight: '600', marginBottom: '4px' }}>Patient Satisfaction</p>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Based on Post-Visit Surveys</p>
                     </div>
                 </div>
 
+                {/* Charts Area */}
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+                    {/* Bar Chart */}
                     <div className="card" style={{ height: '400px' }}>
                         <h3 style={{ marginBottom: '20px', color: '#334155' }}>Patient Volume (Last 7 Days)</h3>
                         <ResponsiveContainer width="100%" height="90%">
                             <BarChart data={analyticsData.weeklyTrend}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
-                                <Bar dataKey="visits" fill="#6366f1" radius={[4,4,0,0]} />
+                                <YAxis allowDecimals={false} />
+                                <Tooltip cursor={{fill: '#f1f5f9'}} />
+                                <Bar dataKey="visits" fill="#6366f1" radius={[4,4,0,0]} name="Appointments" />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
-                    <div className="card" style={{ height: '400px' }}>
+
+                    {/* Text-Based Status List */}
+                    <div className="card" style={{ height: '400px', display: 'flex', flexDirection: 'column' }}>
                         <h3 style={{ marginBottom: '20px', color: '#334155' }}>Appointment Status</h3>
-                        <ResponsiveContainer width="100%" height="90%">
-                            <PieChart>
-                                <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                                    {pieData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip />
-                            </PieChart>
-                        </ResponsiveContainer>
-                        <div style={{ textAlign: 'center', marginTop: '-20px', fontSize: '0.9rem', color: '#64748b' }}>
-                            <span style={{color: '#10b981'}}>● Done</span> &nbsp; 
-                            <span style={{color: '#3b82f6'}}>● Pending</span> &nbsp;
-                            <span style={{color: '#ef4444'}}>● Cancelled</span>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', flex: 1, justifyContent: 'center' }}>
+                            {/* Completed Row */}
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <FiCheckCircle size={20} />
+                                    </div>
+                                    <div>
+                                        <p style={{ margin: 0, fontWeight: '600', color: '#1e293b' }}>Completed</p>
+                                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>{completedPct}% of total</p>
+                                    </div>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <span style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b' }}>{analyticsData.breakdown.completed}</span>
+                                </div>
+                            </div>
+
+                            {/* Scheduled Row */}
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#dbeafe', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <FiClock size={20} />
+                                    </div>
+                                    <div>
+                                        <p style={{ margin: 0, fontWeight: '600', color: '#1e293b' }}>Scheduled</p>
+                                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>{scheduledPct}% of total</p>
+                                    </div>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <span style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b' }}>{analyticsData.breakdown.scheduled}</span>
+                                </div>
+                            </div>
+
+                            {/* Cancelled Row */}
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <FiXCircle size={20} />
+                                    </div>
+                                    <div>
+                                        <p style={{ margin: 0, fontWeight: '600', color: '#1e293b' }}>Cancelled</p>
+                                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>{cancelledPct}% of total</p>
+                                    </div>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <span style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b' }}>{analyticsData.breakdown.cancelled}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -166,7 +234,7 @@ const DoctorDashboard = () => {
             <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
                     <h1 style={{ fontSize: '1.875rem', fontWeight: '700', color: '#1e293b', marginBottom: '8px' }}>
-                        {getGreeting()}, Dr. {user?.name}
+                        {getGreeting()} Dr. {user?.name}
                     </h1>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <p style={{ color: '#64748b', margin: 0 }}>You have <strong>{todayAppointments.length}</strong> appointments today.</p>
@@ -204,17 +272,47 @@ const DoctorDashboard = () => {
                 <>
                     {/* Priority Panel */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-                        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderLeft: '5px solid #ef4444', backgroundColor: '#fef2f2' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontWeight: '600', color: '#64748b' }}>HIGH RISK</span><FiAlertTriangle color="#ef4444" size={20} /></div>
-                            <h3 style={{ fontSize: '2rem', margin: 0 }}>{priorityStats.highRisk}</h3>
+                        
+                        {/* Urgent Attention (Red Theme) */}
+                        <div className="card" style={{ 
+                            display: 'flex', flexDirection: 'column', gap: '8px', 
+                            backgroundColor: '#fef2f2', border: '1px solid #fecaca', 
+                            borderRadius: '12px', padding: '24px' 
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ fontWeight: '700', color: '#b91c1c' }}>URGENT ATTENTION</span>
+                                <FiAlertTriangle color="#ef4444" size={24} />
+                            </div>
+                            <h3 style={{ fontSize: '2.5rem', margin: '8px 0', color: '#7f1d1d' }}>{priorityStats.highRisk}</h3>
+                            <p style={{ fontSize: '0.85rem', color: '#991b1b', margin: 0, fontWeight: '500' }}>Patients tagged with critical health alerts</p>
                         </div>
-                        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderLeft: '5px solid #f59e0b' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontWeight: '600', color: '#64748b' }}>PENDING</span><FiClock color="#f59e0b" size={20} /></div>
-                            <h3 style={{ fontSize: '2rem', margin: 0 }}>{priorityStats.pending}</h3>
+
+                        {/* Up Next (Amber Theme) */}
+                        <div className="card" style={{ 
+                            display: 'flex', flexDirection: 'column', gap: '8px', 
+                            backgroundColor: '#fffbeb', border: '1px solid #fde68a', 
+                            borderRadius: '12px', padding: '24px' 
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ fontWeight: '700', color: '#b45309' }}>UP NEXT</span>
+                                <FiClock color="#f59e0b" size={24} />
+                            </div>
+                            <h3 style={{ fontSize: '2.5rem', margin: '8px 0', color: '#78350f' }}>{priorityStats.pending}</h3>
+                            <p style={{ fontSize: '0.85rem', color: '#92400e', margin: 0, fontWeight: '500' }}>Scheduled appointments awaiting start</p>
                         </div>
-                        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderLeft: '5px solid #10b981' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontWeight: '600', color: '#64748b' }}>ROUTINE</span><FiCheckCircle color="#10b981" size={20} /></div>
-                            <h3 style={{ fontSize: '2rem', margin: 0 }}>{priorityStats.routine}</h3>
+
+                        {/* Standard Care (Green Theme) */}
+                        <div className="card" style={{ 
+                            display: 'flex', flexDirection: 'column', gap: '8px', 
+                            backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', 
+                            borderRadius: '12px', padding: '24px' 
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ fontWeight: '700', color: '#047857' }}>STANDARD CARE</span>
+                                <FiCheckCircle color="#10b981" size={24} />
+                            </div>
+                            <h3 style={{ fontSize: '2.5rem', margin: '8px 0', color: '#064e3b' }}>{priorityStats.routine}</h3>
+                            <p style={{ fontSize: '0.85rem', color: '#065f46', margin: 0, fontWeight: '500' }}>Regular follow-ups and general visits</p>
                         </div>
                     </div>
 
@@ -225,21 +323,40 @@ const DoctorDashboard = () => {
                             <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>No appointments today.</div>
                         ) : (
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                    <tr>
+                                        <th style={{ padding: '16px 24px', textAlign: 'left', color: '#64748b', fontSize: '0.85rem' }}>Time</th>
+                                        <th style={{ padding: '16px 24px', textAlign: 'left', color: '#64748b', fontSize: '0.85rem' }}>Patient Name</th>
+                                        <th style={{ padding: '16px 24px', textAlign: 'left', color: '#64748b', fontSize: '0.85rem' }}>Mode</th>
+                                        <th style={{ padding: '16px 24px', textAlign: 'left', color: '#64748b', fontSize: '0.85rem' }}>Action</th>
+                                    </tr>
+                                </thead>
                                 <tbody>
                                     {todayAppointments.map((appt) => (
                                         <tr key={appt._id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                            <td style={{ padding: '16px 24px' }}>{appt.timeSlot}</td>
+                                            <td style={{ padding: '16px 24px', fontWeight: '500', color: '#334155' }}>{appt.timeSlot}</td>
                                             <td style={{ padding: '16px 24px', fontWeight: '600', color: '#2563eb', cursor: 'pointer' }} onClick={() => handlePatientClick(appt.patientId?._id)}>
                                                 {appt.patientId?.name}
                                                 {appt.riskTag === 'High Risk' && <span style={{ marginLeft: '10px', fontSize: '0.7rem', background: '#fee2e2', color: '#b91c1c', padding: '2px 6px', borderRadius: '4px' }}>HIGH RISK</span>}
                                             </td>
-                                            <td style={{ padding: '16px 24px' }}>{appt.type}</td>
+                                            {/* ONLINE/OFFLINE */}
+                                            <td style={{ padding: '16px 24px' }}>
+                                                {appt.type === 'Online' ? (
+                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#6366f1', background: '#e0e7ff', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', width: 'fit-content' }}>
+                                                        <FiVideo /> Video Call
+                                                    </span>
+                                                ) : (
+                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#059669', background: '#d1fae5', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', width: 'fit-content' }}>
+                                                        <FiMapPin /> In-Clinic
+                                                    </span>
+                                                )}
+                                            </td>
                                             <td style={{ padding: '16px 24px' }}>
                                                 {appt.status !== 'Completed' ? (
                                                     <button onClick={() => startConsultation(appt)} style={{ padding: '6px 12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
                                                         <FiPlay /> Start
                                                     </button>
-                                                ) : <span style={{ color: 'green' }}>Completed</span>}
+                                                ) : <span style={{ color: 'green', fontWeight: '600' }}>Completed</span>}
                                             </td>
                                         </tr>
                                     ))}
