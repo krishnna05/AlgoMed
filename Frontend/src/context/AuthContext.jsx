@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { loginUser, registerUser, logoutUser } from "../services/api";
+import { loginUser, registerPatient, registerDoctor, logoutUser } from "../services/api";
 
 const AuthContext = createContext();
 
@@ -12,7 +12,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for saved user session in localStorage on mount
     const storedUser = localStorage.getItem("user");
     const storedToken = localStorage.getItem("token");
 
@@ -47,9 +46,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signup = async (userData) => {
+  const signup = async (userData, role) => {
     try {
-      const response = await registerUser(userData);
+      let response;
+      
+      if (role === 'doctor') {
+        response = await registerDoctor(userData);
+      } else {
+        response = await registerPatient(userData);
+      }
+
       const newUser = response.data;
 
       setUser(newUser);
@@ -68,7 +74,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-        await logoutUser(); // Notify backend to clear cookies
+        await logoutUser(); 
     } catch (error) {
         console.error("Logout error", error);
     }

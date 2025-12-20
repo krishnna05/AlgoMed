@@ -29,14 +29,13 @@ export const loginUser = async (credentials) => {
   return response.data;
 };
 
-export const registerUser = async (userData) => {
-  let endpoint = '/auth/register-patient'; 
-  
-  if (userData.role === 'doctor') {
-    endpoint = '/auth/register-doctor';
-  }
+export const registerPatient = async (userData) => {
+  const response = await api.post('/auth/register-patient', userData);
+  return response.data;
+};
 
-  const response = await api.post(endpoint, userData);
+export const registerDoctor = async (userData) => {
+  const response = await api.post('/auth/register-doctor', userData);
   return response.data;
 };
 

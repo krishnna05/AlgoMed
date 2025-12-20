@@ -1,6 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { getPatientProfile, updatePatientProfile } from '../services/api';
 
+// --- DEMO DATA CONSTANT ---
+const DEMO_DATA = {
+  dateOfBirth: '1985-06-15',
+  bloodGroup: 'O+',
+  height: '178',
+  weight: '75',
+  medicalHistory: [
+    { condition: 'Hypertension', diagnosedDate: '2019-04-10', status: 'Managed' },
+    { condition: 'Seasonal Allergies', diagnosedDate: '2010-03-01', status: 'Active' }
+  ],
+  allergies: [
+    { allergen: 'Penicillin', reaction: 'Skin Rash', severity: 'Moderate' },
+    { allergen: 'Peanuts', reaction: 'Anaphylaxis', severity: 'Severe' }
+  ],
+  currentMedications: [
+    { name: 'Lisinopril', dosage: '10mg', frequency: 'Once daily' },
+    { name: 'Cetirizine', dosage: '10mg', frequency: 'As needed' }
+  ],
+  lifestyle: {
+    smoking: 'No',
+    alcohol: 'Occasionally',
+    activityLevel: 'Moderate'
+  },
+  emergencyContact: {
+    name: 'Aditi Sehrawat',
+    phone: '9678389678',
+    relation: 'Spouse'
+  }
+};
+
 const PatientProfile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -57,6 +87,13 @@ const PatientProfile = () => {
 
   // --- Handlers ---
 
+  const fillDemoData = () => {
+    if (window.confirm("This will overwrite your current form fields with demo data. Continue?")) {
+      setFormData(DEMO_DATA);
+      setMessage({ type: 'success', text: 'Demo data loaded! Review and click "Save" to apply.' });
+    }
+  };
+
   const handleBasicChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -109,7 +146,7 @@ const PatientProfile = () => {
 
   // --- Styles ---
   const containerStyle = { maxWidth: '850px', margin: '0 auto', paddingBottom: '40px' };
-  
+
   const sectionCard = {
     backgroundColor: 'white',
     padding: '25px',
@@ -167,6 +204,18 @@ const PatientProfile = () => {
     marginTop: '10px'
   };
 
+  const demoBtn = {
+    backgroundColor: '#6c5ce7',
+    color: 'white',
+    border: 'none',
+    padding: '10px 20px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: '600',
+    marginBottom: '20px',
+    float: 'right'
+  };
+
   const saveBtn = {
     width: '100%',
     padding: '15px',
@@ -194,12 +243,17 @@ const PatientProfile = () => {
 
   return (
     <div style={containerStyle}>
-      <h1 style={{ marginBottom: '25px', color: '#2c3e50' }}>Medical Profile</h1>
-      
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+        <h1 style={{ margin: 0, color: '#2c3e50' }}>Medical Profile</h1>
+        <button type="button" onClick={fillDemoData} style={demoBtn} title="Populate with sample data">
+          Load Demo Data
+        </button>
+      </div>
+
       {message.text && <div style={messageBox(message.type)}>{message.text}</div>}
 
       <form onSubmit={handleSubmit}>
-        
+
         {/* 1. Basic Medical Info */}
         <div style={sectionCard}>
           <h2 style={headerTitle}>Basic Details</h2>
