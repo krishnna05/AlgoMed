@@ -1,6 +1,6 @@
 const PatientProfile = require('../models/PatientProfile');
 const User = require('../models/User');
-const Appointment = require('../models/Appointment'); // Import Appointment model
+const Appointment = require('../models/Appointment'); 
 
 const getPatientProfile = async (req, res, next) => {
     try {

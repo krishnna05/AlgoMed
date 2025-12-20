@@ -20,7 +20,7 @@ const getAllDoctors = async (req, res, next) => {
     const doctorData = await Promise.all(
       doctors.map(async (doc) => {
         const profile = await DoctorProfile.findOne({ userId: doc._id });
-        if (!profile) return null; // Skip if no profile set up
+        if (!profile) return null; 
 
         return {
           _id: doc._id,

@@ -16,7 +16,6 @@ const chatRoutes = require("./routes/chatRoutes");
 const patientRoutes = require("./routes/patientRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
-const resetRoutes = require("./routes/resetRoutes"); // NEW IMPORT
 
 // Initialize Express App
 const app = express();
@@ -45,10 +44,6 @@ app.use("/api/patients", patientRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/analytics", analyticsRoutes);
 
-// NEW: Reset Route
-app.use("/api/reset", resetRoutes);
-
-// Base Route
 app.get("/", (req, res) => {
   res.send("AlgoMed API is running...");
 });
