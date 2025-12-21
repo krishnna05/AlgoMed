@@ -3,20 +3,15 @@ const User = require("../models/User");
 
 const getAllDoctors = async (req, res, next) => {
   try {
-    const { query } = req.query; // Search by name or specialization
+    const { query } = req.query;
 
-    // 1. Find Users who are doctors
     let userQuery = { role: "doctor" };
-
     if (query) {
-      userQuery.name = { $regex: query, $options: "i" }; // Partial match, case insensitive
+      userQuery.name = { $regex: query, $options: "i" };
     }
 
-    const doctors = await User.find(userQuery).select(
-      "name email phone gender"
-    );
+    const doctors = await User.find(userQuery).select("name email phone gender");
 
-    // 2. Get their profile details (specialization, fees, etc.)
     const doctorData = await Promise.all(
       doctors.map(async (doc) => {
         const profile = await DoctorProfile.findOne({ userId: doc._id });
@@ -32,11 +27,12 @@ const getAllDoctors = async (req, res, next) => {
           clinicAddress: profile.clinicAddress,
           isApproved: profile.isApproved,
           availableSlots: profile.availableSlots,
+          languages: profile.languages,
+          awards: profile.awards,
         };
       })
     );
 
-    // Filter out nulls (doctors without profiles)
     const activeDoctors = doctorData.filter((d) => d !== null);
 
     res.status(200).json({
@@ -52,14 +48,12 @@ const getAllDoctors = async (req, res, next) => {
 const getDoctorById = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
-
     if (!user || user.role !== "doctor") {
       res.status(404);
       throw new Error("Doctor not found");
     }
 
     const profile = await DoctorProfile.findOne({ userId: req.params.id });
-
     if (!profile) {
       res.status(404);
       throw new Error("Doctor profile incomplete");
@@ -67,10 +61,7 @@ const getDoctorById = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      data: {
-        user,
-        profile,
-      },
+      data: { user, profile },
     });
   } catch (error) {
     next(error);
@@ -80,17 +71,10 @@ const getDoctorById = async (req, res, next) => {
 const getDoctorProfile = async (req, res, next) => {
   try {
     const profile = await DoctorProfile.findOne({ userId: req.user.id });
-
     if (!profile) {
-      return res
-        .status(200)
-        .json({ success: true, data: null, message: "No profile created yet" });
+      return res.status(200).json({ success: true, data: null, message: "No profile created yet" });
     }
-
-    res.status(200).json({
-      success: true,
-      data: profile,
-    });
+    res.status(200).json({ success: true, data: profile });
   } catch (error) {
     next(error);
   }
@@ -99,27 +83,27 @@ const getDoctorProfile = async (req, res, next) => {
 const updateDoctorProfile = async (req, res, next) => {
   try {
     const {
-      specialization,
-      experience,
-      qualifications,
-      fees,
-      clinicAddress,
-      about,
-      availableSlots,
+      specialization, experience, qualifications, fees,
+      clinicAddress, about, availableSlots,
+      languages, awards, socialLinks
     } = req.body;
 
-    // Check if profile exists
     let profile = await DoctorProfile.findOne({ userId: req.user.id });
 
     if (profile) {
       // Update existing
-      profile.specialization = specialization || profile.specialization;
-      profile.experience = experience || profile.experience;
-      profile.qualifications = qualifications || profile.qualifications;
-      profile.fees = fees || profile.fees;
-      profile.clinicAddress = clinicAddress || profile.clinicAddress;
-      profile.about = about || profile.about;
-      profile.availableSlots = availableSlots || profile.availableSlots;
+      if(specialization) profile.specialization = specialization;
+      if(experience) profile.experience = experience;
+      if(qualifications) profile.qualifications = qualifications;
+      if(fees) profile.fees = fees;
+      if(clinicAddress) profile.clinicAddress = clinicAddress;
+      if(about) profile.about = about;
+      if(availableSlots) profile.availableSlots = availableSlots;
+      
+      // Update New Fields
+      if(languages) profile.languages = languages;
+      if(awards) profile.awards = awards;
+      if(socialLinks) profile.socialLinks = socialLinks;
 
       const updatedProfile = await profile.save();
       return res.status(200).json({ success: true, data: updatedProfile });
@@ -134,6 +118,9 @@ const updateDoctorProfile = async (req, res, next) => {
         clinicAddress,
         about,
         availableSlots,
+        languages,
+        awards,
+        socialLinks
       });
 
       return res.status(201).json({ success: true, data: profile });

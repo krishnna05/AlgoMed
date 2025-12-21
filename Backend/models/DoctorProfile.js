@@ -21,6 +21,21 @@ const doctorProfileSchema = new mongoose.Schema({
         type: [String], 
         required: [true, 'Please add qualifications']
     },
+
+    languages: {
+        type: [String],
+        default: ['English']
+    },
+    awards: {
+        type: [String],
+        default: []
+    },
+    socialLinks: {
+        website: { type: String, default: '' },
+        linkedin: { type: String, default: '' },
+        twitter: { type: String, default: '' }
+    },
+
     fees: {
         type: Number,
         required: [true, 'Please add consultation fee'],
@@ -34,7 +49,6 @@ const doctorProfileSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
-    // For storing URL of uploaded medical license/ID
     verificationDocument: {
         type: String, 
         default: ""
@@ -56,7 +70,7 @@ const doctorProfileSchema = new mongoose.Schema({
     }],
     isApproved: {
         type: Boolean,
-        default: false // Admin must approve manually
+        default: false 
     }
 }, {
     timestamps: true
