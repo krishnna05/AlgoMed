@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { getPatientProfile, updatePatientProfile } from '../services/api';
+import { 
+  FiSave, FiPrinter, FiActivity, FiHeart, FiAlertCircle, 
+  FiUser, FiCheckCircle, FiTrendingUp, FiInfo, FiTrash2, FiPlus 
+} from 'react-icons/fi';
 
 // --- DEMO DATA CONSTANT ---
 const DEMO_DATA = {
@@ -35,28 +39,13 @@ const PatientProfile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [activeTab, setActiveTab] = useState('clinical'); 
 
   const [formData, setFormData] = useState({
-    // General
-    dateOfBirth: '',
-    bloodGroup: '',
-    height: '',
-    weight: '',
-    // Arrays
-    medicalHistory: [],
-    allergies: [],
-    currentMedications: [],
-    // Objects
-    lifestyle: {
-      smoking: 'No',
-      alcohol: 'No',
-      activityLevel: 'Moderate'
-    },
-    emergencyContact: {
-      name: '',
-      phone: '',
-      relation: ''
-    }
+    dateOfBirth: '', bloodGroup: '', height: '', weight: '',
+    medicalHistory: [], allergies: [], currentMedications: [],
+    lifestyle: { smoking: 'No', alcohol: 'No', activityLevel: 'Moderate' },
+    emergencyContact: { name: '', phone: '', relation: '' }
   });
 
   useEffect(() => {
@@ -85,16 +74,50 @@ const PatientProfile = () => {
     }
   };
 
-  // --- Handlers ---
+  // --- DYNAMIC CALCULATIONS ---
+
+  // 1. BMI Calculator
+  const bmiData = useMemo(() => {
+    if (formData.height && formData.weight) {
+        const h = formData.height / 100; 
+        const val = (formData.weight / (h * h)).toFixed(1);
+        
+        let status = 'Unknown';
+        let color = '#94a3b8';
+        
+        if (val < 18.5) { status = 'Underweight'; color = '#3b82f6'; }
+        else if (val < 25) { status = 'Healthy Weight'; color = '#22c55e'; }
+        else if (val < 30) { status = 'Overweight'; color = '#eab308'; }
+        else { status = 'Obese'; color = '#ef4444'; }
+
+        return { value: val, status, color };
+    }
+    return null;
+  }, [formData.height, formData.weight]);
+
+  // 2. Profile Strength
+  const profileStrength = useMemo(() => {
+    let score = 0;
+    if (formData.dateOfBirth) score += 10;
+    if (formData.bloodGroup) score += 10;
+    if (formData.height && formData.weight) score += 20;
+    if (formData.emergencyContact?.name) score += 20;
+    if (formData.medicalHistory.length > 0) score += 10;
+    if (formData.lifestyle?.activityLevel) score += 10;
+    if (formData.lifestyle?.smoking) score += 20;
+    return score;
+  }, [formData]);
+
+  // --- HANDLERS ---
 
   const fillDemoData = () => {
     if (window.confirm("This will overwrite your current form fields with demo data. Continue?")) {
       setFormData(DEMO_DATA);
-      setMessage({ type: 'success', text: 'Demo data loaded! Review and click "Save" to apply.' });
+      setMessage({ type: 'success', text: 'Demo data loaded! Review and click "Save".' });
     }
   };
 
-  const handleBasicChange = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -102,23 +125,8 @@ const PatientProfile = () => {
   const handleNestedChange = (parent, field, value) => {
     setFormData(prev => ({
       ...prev,
-      [parent]: {
-        ...prev[parent],
-        [field]: value
-      }
+      [parent]: { ...prev[parent], [field]: value }
     }));
-  };
-
-  const addItem = (field, emptyItem) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: [...prev[field], emptyItem]
-    }));
-  };
-
-  const removeItem = (field, index) => {
-    const updated = formData[field].filter((_, i) => i !== index);
-    setFormData(prev => ({ ...prev, [field]: updated }));
   };
 
   const handleArrayChange = (field, index, subField, value) => {
@@ -127,304 +135,368 @@ const PatientProfile = () => {
     setFormData(prev => ({ ...prev, [field]: updated }));
   };
 
+  const addItem = (field, item) => {
+    setFormData(prev => ({ ...prev, [field]: [...prev[field], item] }));
+  };
+
+  const removeItem = (field, index) => {
+    const updated = formData[field].filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, [field]: updated }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     setMessage({ type: '', text: '' });
-
     try {
       await updatePatientProfile(formData);
-      setMessage({ type: 'success', text: 'Health profile updated successfully!' });
-      window.scrollTo(0, 0);
+      setMessage({ type: 'success', text: 'Medical profile updated successfully!' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
-      console.error("Error updating profile", error);
-      setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
+      setMessage({ type: 'error', text: 'Failed to update profile.' });
     } finally {
       setSaving(false);
     }
   };
 
-  // --- Styles ---
-  const containerStyle = { maxWidth: '850px', margin: '0 auto', paddingBottom: '40px' };
-
-  const sectionCard = {
-    backgroundColor: 'white',
-    padding: '25px',
-    borderRadius: '12px',
-    border: '1px solid #eee',
-    marginBottom: '20px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+  const handlePrint = () => {
+    window.print();
   };
 
-  const headerTitle = {
-    fontSize: '1.3rem',
-    color: '#2c3e50',
-    marginBottom: '20px',
-    borderBottom: '1px solid #f1f2f6',
-    paddingBottom: '10px',
-    fontWeight: '600'
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading Profile...</div>;
+
+  // --- STYLES ---
+  const styles = {
+    container: { maxWidth: '1200px', margin: '0 auto', paddingBottom: '60px' },
+    
+    // Header
+    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '30px', flexWrap: 'wrap', gap: '20px' },
+    titleGroup: { flex: 1 },
+    pageTitle: { fontSize: '2rem', fontWeight: '800', color: '#1e293b', margin: 0, letterSpacing: '-1px' },
+    subTitle: { color: '#64748b', marginTop: '8px' },
+    
+    // Grid Layout
+    mainGrid: { display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '30px', alignItems: 'start' },
+    
+    // Cards
+    card: { backgroundColor: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', marginBottom: '24px' },
+    
+    // Digital ID Card (Visual)
+    idCard: {
+        background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+        borderRadius: '20px', padding: '24px', color: 'white',
+        boxShadow: '0 10px 25px -5px rgba(30, 41, 59, 0.5)',
+        position: 'relative', overflow: 'hidden', marginBottom: '30px'
+    },
+    idHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
+    idLabel: { fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2px', opacity: 0.7 },
+    idGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px' },
+    idItem: { background: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '10px', backdropFilter: 'blur(5px)' },
+    idValue: { fontSize: '1.1rem', fontWeight: '700', marginBottom: '2px' },
+    idKey: { fontSize: '0.75rem', opacity: 0.8 },
+
+    // Inputs
+    label: { display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#475569', marginBottom: '6px', textTransform: 'uppercase' },
+    input: { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.95rem', transition: 'all 0.2s' },
+    select: { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.95rem', backgroundColor: 'white' },
+    
+    // Section Headers
+    sectionHeader: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' },
+    sectionIcon: { color: '#3b82f6', fontSize: '1.2rem' },
+    sectionTitle: { fontSize: '1.1rem', fontWeight: '700', color: '#1e293b', margin: 0 },
+
+    // Buttons
+    btnPrimary: { padding: '12px 24px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)' },
+    btnSecondary: { padding: '10px 20px', backgroundColor: 'white', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' },
+    btnSmall: { padding: '6px 12px', fontSize: '0.8rem', backgroundColor: '#f1f5f9', border: 'none', borderRadius: '6px', cursor: 'pointer', color: '#475569', fontWeight: '600' },
+    btnIcon: { background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', transition: 'color 0.2s' },
+
+    // Interactive List Items
+    listItem: { display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px', marginBottom: '10px', border: '1px solid #f1f5f9' },
+    
+    // BMI Widget
+    bmiWidget: { textAlign: 'center', padding: '20px', background: bmiData ? bmiData.color + '10' : '#f8fafc', borderRadius: '12px', border: `1px solid ${bmiData ? bmiData.color : '#e2e8f0'}` },
+    bmiValue: { fontSize: '2.5rem', fontWeight: '800', color: bmiData ? bmiData.color : '#cbd5e1', lineHeight: 1, marginBottom: '5px' },
+    bmiStatus: { fontSize: '1rem', fontWeight: '600', color: bmiData ? bmiData.color : '#94a3b8', textTransform: 'uppercase' },
+
+    // Progress Bar
+    progressBg: { height: '8px', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden', marginTop: '8px' },
+    progressFill: { height: '100%', backgroundColor: '#22c55e', width: `${profileStrength}%`, transition: 'width 0.5s ease' }
   };
-
-  const grid2 = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' };
-  const grid3 = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' };
-
-  const label = { display: 'block', marginBottom: '8px', fontWeight: '500', color: '#34495e', fontSize: '0.9rem' };
-  const input = { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.95rem', boxSizing: 'border-box' };
-  const select = { ...input, backgroundColor: 'white' };
-
-  const arrayItemStyle = {
-    backgroundColor: '#f8f9fa',
-    padding: '15px',
-    borderRadius: '8px',
-    marginBottom: '10px',
-    position: 'relative',
-    border: '1px solid #e9ecef'
-  };
-
-  const removeBtn = {
-    position: 'absolute',
-    top: '10px',
-    right: '10px',
-    background: 'none',
-    border: 'none',
-    color: '#e74c3c',
-    cursor: 'pointer',
-    fontSize: '1.2rem'
-  };
-
-  const addBtn = {
-    backgroundColor: '#e8f5e9',
-    color: '#2e7d32',
-    border: 'none',
-    padding: '8px 16px',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontWeight: '500',
-    fontSize: '0.9rem',
-    marginTop: '10px'
-  };
-
-  const demoBtn = {
-    backgroundColor: '#6c5ce7',
-    color: 'white',
-    border: 'none',
-    padding: '10px 20px',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    marginBottom: '20px',
-    float: 'right'
-  };
-
-  const saveBtn = {
-    width: '100%',
-    padding: '15px',
-    backgroundColor: '#3498db',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '1.1rem',
-    fontWeight: '600',
-    cursor: saving ? 'wait' : 'pointer',
-    opacity: saving ? 0.7 : 1,
-    marginTop: '20px'
-  };
-
-  const messageBox = (type) => ({
-    padding: '15px',
-    borderRadius: '8px',
-    marginBottom: '20px',
-    backgroundColor: type === 'success' ? '#d4edda' : '#f8d7da',
-    color: type === 'success' ? '#155724' : '#721c24',
-    textAlign: 'center'
-  });
-
-  if (loading) return <div style={{ textAlign: 'center', padding: '40px' }}>Loading health record...</div>;
 
   return (
-    <div style={containerStyle}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
-        <h1 style={{ margin: 0, color: '#2c3e50' }}>Medical Profile</h1>
-        <button type="button" onClick={fillDemoData} style={demoBtn} title="Populate with sample data">
-          Load Demo Data
-        </button>
+    <div style={styles.container}>
+      
+      {/* --- HEADER SECTION --- */}
+      <div style={styles.header}>
+        <div style={styles.titleGroup}>
+            <h1 style={styles.pageTitle}>My Health Profile</h1>
+            <p style={styles.subTitle}>Manage your medical history and vital stats securely.</p>
+        </div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+            <button type="button" onClick={fillDemoData} style={styles.btnSecondary}>
+                <FiActivity /> Load Demo Data
+            </button>
+            <button type="button" onClick={handlePrint} style={styles.btnSecondary}>
+                <FiPrinter /> Print Card
+            </button>
+            <button type="submit" form="profile-form" style={styles.btnPrimary} disabled={saving}>
+                {saving ? 'Saving...' : <><FiSave /> Save Changes</>}
+            </button>
+        </div>
       </div>
 
-      {message.text && <div style={messageBox(message.type)}>{message.text}</div>}
-
-      <form onSubmit={handleSubmit}>
-
-        {/* 1. Basic Medical Info */}
-        <div style={sectionCard}>
-          <h2 style={headerTitle}>Basic Details</h2>
-          <div style={grid2}>
-            <div>
-              <label style={label}>Date of Birth</label>
-              <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleBasicChange} style={input} />
-            </div>
-            <div>
-              <label style={label}>Blood Group</label>
-              <select name="bloodGroup" value={formData.bloodGroup} onChange={handleBasicChange} style={select}>
-                <option value="">Select</option>
-                {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
-                  <option key={bg} value={bg}>{bg}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={label}>Height (cm)</label>
-              <input type="number" name="height" value={formData.height} onChange={handleBasicChange} placeholder="175" style={input} />
-            </div>
-            <div>
-              <label style={label}>Weight (kg)</label>
-              <input type="number" name="weight" value={formData.weight} onChange={handleBasicChange} placeholder="70" style={input} />
-            </div>
+      {message.text && (
+          <div style={{ padding: '16px', borderRadius: '8px', marginBottom: '24px', backgroundColor: message.type === 'success' ? '#dcfce7' : '#fee2e2', color: message.type === 'success' ? '#166534' : '#991b1b', border: '1px solid currentColor', display: 'flex', alignItems: 'center', gap: '10px' }}>
+             {message.type === 'success' ? <FiCheckCircle /> : <FiAlertCircle />} {message.text}
           </div>
-        </div>
+      )}
 
-        {/* 2. Lifestyle */}
-        <div style={sectionCard}>
-          <h2 style={headerTitle}>Lifestyle</h2>
-          <div style={grid3}>
-            <div>
-              <label style={label}>Smoking</label>
-              <select value={formData.lifestyle.smoking} onChange={(e) => handleNestedChange('lifestyle', 'smoking', e.target.value)} style={select}>
-                <option value="No">No</option>
-                <option value="Yes">Yes</option>
-                <option value="Occasionally">Occasionally</option>
-              </select>
-            </div>
-            <div>
-              <label style={label}>Alcohol</label>
-              <select value={formData.lifestyle.alcohol} onChange={(e) => handleNestedChange('lifestyle', 'alcohol', e.target.value)} style={select}>
-                <option value="No">No</option>
-                <option value="Yes">Yes</option>
-                <option value="Occasionally">Occasionally</option>
-              </select>
-            </div>
-            <div>
-              <label style={label}>Activity Level</label>
-              <select value={formData.lifestyle.activityLevel} onChange={(e) => handleNestedChange('lifestyle', 'activityLevel', e.target.value)} style={select}>
-                <option value="Sedentary">Sedentary</option>
-                <option value="Moderate">Moderate</option>
-                <option value="Active">Active</option>
-              </select>
-            </div>
+      {/* --- DIGITAL ID CARD VISUAL --- */}
+      <div style={styles.idCard} className="printable-card">
+          <div style={styles.idHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <FiActivity size={24} color="#3b82f6" />
+                  <span style={{ fontWeight: '700', fontSize: '1.2rem', letterSpacing: '-0.5px' }}>Algo<span style={{color: '#3b82f6'}}>Med</span> ID</span>
+              </div>
+              <span style={styles.idLabel}>Official Medical Record</span>
           </div>
-        </div>
-
-        {/* 3. Medical History */}
-        <div style={sectionCard}>
-          <h2 style={headerTitle}>Medical History</h2>
-          {formData.medicalHistory.map((item, index) => (
-            <div key={index} style={arrayItemStyle}>
-              <button type="button" onClick={() => removeItem('medicalHistory', index)} style={removeBtn}>&times;</button>
-              <div style={grid3}>
-                <div>
-                  <label style={label}>Condition</label>
-                  <input type="text" placeholder="e.g. Diabetes" value={item.condition} onChange={(e) => handleArrayChange('medicalHistory', index, 'condition', e.target.value)} style={input} />
-                </div>
-                <div>
-                  <label style={label}>Date Diagnosed</label>
-                  <input type="date" value={item.diagnosedDate ? item.diagnosedDate.split('T')[0] : ''} onChange={(e) => handleArrayChange('medicalHistory', index, 'diagnosedDate', e.target.value)} style={input} />
-                </div>
-                <div>
-                  <label style={label}>Status</label>
-                  <select value={item.status} onChange={(e) => handleArrayChange('medicalHistory', index, 'status', e.target.value)} style={select}>
-                    <option value="Active">Active</option>
-                    <option value="Managed">Managed</option>
-                    <option value="Cured">Cured</option>
-                  </select>
-                </div>
+          <div style={styles.idGrid}>
+              <div style={styles.idItem}>
+                  <div style={styles.idKey}>Blood Group</div>
+                  <div style={styles.idValue}>{formData.bloodGroup || '--'}</div>
               </div>
-            </div>
-          ))}
-          <button type="button" onClick={() => addItem('medicalHistory', { condition: '', diagnosedDate: '', status: 'Active' })} style={addBtn}>
-            + Add Condition
-          </button>
-        </div>
-
-        {/* 4. Allergies */}
-        <div style={sectionCard}>
-          <h2 style={headerTitle}>Allergies</h2>
-          {formData.allergies.map((item, index) => (
-            <div key={index} style={arrayItemStyle}>
-              <button type="button" onClick={() => removeItem('allergies', index)} style={removeBtn}>&times;</button>
-              <div style={grid3}>
-                <div>
-                  <label style={label}>Allergen</label>
-                  <input type="text" placeholder="e.g. Peanuts" value={item.allergen} onChange={(e) => handleArrayChange('allergies', index, 'allergen', e.target.value)} style={input} />
-                </div>
-                <div>
-                  <label style={label}>Reaction</label>
-                  <input type="text" placeholder="e.g. Rash" value={item.reaction} onChange={(e) => handleArrayChange('allergies', index, 'reaction', e.target.value)} style={input} />
-                </div>
-                <div>
-                  <label style={label}>Severity</label>
-                  <select value={item.severity} onChange={(e) => handleArrayChange('allergies', index, 'severity', e.target.value)} style={select}>
-                    <option value="Mild">Mild</option>
-                    <option value="Moderate">Moderate</option>
-                    <option value="Severe">Severe</option>
-                  </select>
-                </div>
+              <div style={styles.idItem}>
+                  <div style={styles.idKey}>Date of Birth</div>
+                  <div style={styles.idValue}>{formData.dateOfBirth || '--'}</div>
               </div>
-            </div>
-          ))}
-          <button type="button" onClick={() => addItem('allergies', { allergen: '', reaction: '', severity: 'Mild' })} style={addBtn}>
-            + Add Allergy
-          </button>
-        </div>
-
-        {/* 5. Current Medications */}
-        <div style={sectionCard}>
-          <h2 style={headerTitle}>Current Medications</h2>
-          {formData.currentMedications.map((item, index) => (
-            <div key={index} style={arrayItemStyle}>
-              <button type="button" onClick={() => removeItem('currentMedications', index)} style={removeBtn}>&times;</button>
-              <div style={grid3}>
-                <div>
-                  <label style={label}>Medication Name</label>
-                  <input type="text" placeholder="e.g. Paracetamol" value={item.name} onChange={(e) => handleArrayChange('currentMedications', index, 'name', e.target.value)} style={input} />
-                </div>
-                <div>
-                  <label style={label}>Dosage</label>
-                  <input type="text" placeholder="e.g. 500mg" value={item.dosage} onChange={(e) => handleArrayChange('currentMedications', index, 'dosage', e.target.value)} style={input} />
-                </div>
-                <div>
-                  <label style={label}>Frequency</label>
-                  <input type="text" placeholder="e.g. Twice daily" value={item.frequency} onChange={(e) => handleArrayChange('currentMedications', index, 'frequency', e.target.value)} style={input} />
-                </div>
+              <div style={styles.idItem}>
+                  <div style={styles.idKey}>Emergency Contact</div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>{formData.emergencyContact.phone || '--'}</div>
+                  <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{formData.emergencyContact.name}</div>
               </div>
-            </div>
-          ))}
-          <button type="button" onClick={() => addItem('currentMedications', { name: '', dosage: '', frequency: '' })} style={addBtn}>
-            + Add Medication
-          </button>
-        </div>
-
-        {/* 6. Emergency Contact */}
-        <div style={sectionCard}>
-          <h2 style={headerTitle}>Emergency Contact</h2>
-          <div style={grid3}>
-            <div>
-              <label style={label}>Name</label>
-              <input type="text" value={formData.emergencyContact.name} onChange={(e) => handleNestedChange('emergencyContact', 'name', e.target.value)} style={input} />
-            </div>
-            <div>
-              <label style={label}>Phone</label>
-              <input type="text" value={formData.emergencyContact.phone} onChange={(e) => handleNestedChange('emergencyContact', 'phone', e.target.value)} style={input} />
-            </div>
-            <div>
-              <label style={label}>Relation</label>
-              <input type="text" value={formData.emergencyContact.relation} onChange={(e) => handleNestedChange('emergencyContact', 'relation', e.target.value)} style={input} />
-            </div>
+              <div style={styles.idItem}>
+                  <div style={styles.idKey}>Known Allergies</div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>{formData.allergies.length > 0 ? `${formData.allergies.length} Active` : 'None'}</div>
+              </div>
           </div>
-        </div>
+          {/* Decorative Circles */}
+          <div style={{ position: 'absolute', right: -20, bottom: -20, width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}></div>
+      </div>
 
-        <button type="submit" style={saveBtn} disabled={saving}>
-          {saving ? 'Saving Profile...' : 'Save Medical Profile'}
-        </button>
+      <form id="profile-form" onSubmit={handleSubmit}>
+        <div style={styles.mainGrid} className="responsive-grid">
+            
+            {/* --- LEFT COLUMN: FORMS --- */}
+            <div>
+                {/* 1. Basic Vitals */}
+                <div style={styles.card}>
+                    <div style={styles.sectionHeader}>
+                        <FiUser style={styles.sectionIcon} />
+                        <h3 style={styles.sectionTitle}>Essential Vitals</h3>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px' }}>
+                        <div>
+                            <label style={styles.label}>DOB</label>
+                            <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} style={styles.input} />
+                        </div>
+                        <div>
+                             <label style={styles.label}>Blood Type</label>
+                             <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} style={styles.select}>
+                                <option value="">--</option>
+                                {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                             </select>
+                        </div>
+                        <div>
+                             <label style={styles.label}>Height (cm)</label>
+                             <input type="number" name="height" value={formData.height} onChange={handleChange} placeholder="175" style={styles.input} />
+                        </div>
+                        <div>
+                             <label style={styles.label}>Weight (kg)</label>
+                             <input type="number" name="weight" value={formData.weight} onChange={handleChange} placeholder="70" style={styles.input} />
+                        </div>
+                    </div>
+                </div>
+
+                {/* 2. Medical History (Chips Layout) */}
+                <div style={styles.card}>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <FiActivity style={styles.sectionIcon} />
+                            <h3 style={styles.sectionTitle}>Conditions & History</h3>
+                        </div>
+                        <button type="button" onClick={() => addItem('medicalHistory', { condition: '', diagnosedDate: '', status: 'Active' })} style={styles.btnSmall}>
+                            <FiPlus /> Add
+                        </button>
+                    </div>
+
+                    {formData.medicalHistory.length === 0 && <div style={{ color: '#94a3b8', fontStyle: 'italic', padding: '10px' }}>No medical conditions listed.</div>}
+                    
+                    {formData.medicalHistory.map((item, index) => (
+                        <div key={index} style={styles.listItem}>
+                             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '10px' }}>
+                                 <input placeholder="Condition (e.g. Diabetes)" value={item.condition} onChange={(e) => handleArrayChange('medicalHistory', index, 'condition', e.target.value)} style={{...styles.input, padding: '8px'}} />
+                                 <input type="date" value={item.diagnosedDate ? item.diagnosedDate.split('T')[0] : ''} onChange={(e) => handleArrayChange('medicalHistory', index, 'diagnosedDate', e.target.value)} style={{...styles.input, padding: '8px'}} />
+                                 <select value={item.status} onChange={(e) => handleArrayChange('medicalHistory', index, 'status', e.target.value)} style={{...styles.select, padding: '8px'}}>
+                                    <option value="Active">Active</option>
+                                    <option value="Managed">Managed</option>
+                                    <option value="Cured">Cured</option>
+                                 </select>
+                             </div>
+                             <button type="button" onClick={() => removeItem('medicalHistory', index)} style={{...styles.btnIcon, color: '#ef4444'}}>
+                                 <FiTrash2 />
+                             </button>
+                        </div>
+                    ))}
+                </div>
+
+                {/* 3. Allergies (Chips Layout) */}
+                <div style={styles.card}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <FiAlertCircle style={styles.sectionIcon} />
+                            <h3 style={styles.sectionTitle}>Allergies</h3>
+                        </div>
+                        <button type="button" onClick={() => addItem('allergies', { allergen: '', reaction: '', severity: 'Mild' })} style={styles.btnSmall}>
+                            <FiPlus /> Add
+                        </button>
+                    </div>
+
+                    {formData.allergies.map((item, index) => (
+                        <div key={index} style={styles.listItem}>
+                             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '2fr 2fr 1fr', gap: '10px' }}>
+                                 <input placeholder="Allergen (e.g. Peanuts)" value={item.allergen} onChange={(e) => handleArrayChange('allergies', index, 'allergen', e.target.value)} style={{...styles.input, padding: '8px'}} />
+                                 <input placeholder="Reaction" value={item.reaction} onChange={(e) => handleArrayChange('allergies', index, 'reaction', e.target.value)} style={{...styles.input, padding: '8px'}} />
+                                 <select value={item.severity} onChange={(e) => handleArrayChange('allergies', index, 'severity', e.target.value)} style={{...styles.select, padding: '8px'}}>
+                                    <option value="Mild">Mild</option>
+                                    <option value="Moderate">Moderate</option>
+                                    <option value="Severe">Severe</option>
+                                 </select>
+                             </div>
+                             <button type="button" onClick={() => removeItem('allergies', index)} style={{...styles.btnIcon, color: '#ef4444'}}>
+                                 <FiTrash2 />
+                             </button>
+                        </div>
+                    ))}
+                </div>
+
+                {/* 4. Medications */}
+                <div style={styles.card}>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <FiCheckCircle style={styles.sectionIcon} />
+                            <h3 style={styles.sectionTitle}>Current Medications</h3>
+                        </div>
+                        <button type="button" onClick={() => addItem('currentMedications', { name: '', dosage: '', frequency: '' })} style={styles.btnSmall}>
+                            <FiPlus /> Add
+                        </button>
+                    </div>
+                     {formData.currentMedications.map((item, index) => (
+                        <div key={index} style={styles.listItem}>
+                             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '10px' }}>
+                                 <input placeholder="Medication Name" value={item.name} onChange={(e) => handleArrayChange('currentMedications', index, 'name', e.target.value)} style={{...styles.input, padding: '8px'}} />
+                                 <input placeholder="Dosage" value={item.dosage} onChange={(e) => handleArrayChange('currentMedications', index, 'dosage', e.target.value)} style={{...styles.input, padding: '8px'}} />
+                                 <input placeholder="Frequency" value={item.frequency} onChange={(e) => handleArrayChange('currentMedications', index, 'frequency', e.target.value)} style={{...styles.input, padding: '8px'}} />
+                             </div>
+                             <button type="button" onClick={() => removeItem('currentMedications', index)} style={{...styles.btnIcon, color: '#ef4444'}}>
+                                 <FiTrash2 />
+                             </button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* --- RIGHT COLUMN: WIDGETS --- */}
+            <div>
+                {/* Widget 1: BMI Calculator */}
+                <div style={{ ...styles.card, position: 'sticky', top: '20px' }}>
+                    <h3 style={{ ...styles.sectionTitle, marginBottom: '15px' }}>Body Mass Index</h3>
+                    {bmiData ? (
+                        <div style={styles.bmiWidget}>
+                            <div style={styles.bmiValue}>{bmiData.value}</div>
+                            <div style={styles.bmiStatus}>{bmiData.status}</div>
+                            <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '10px' }}>
+                                Based on {formData.height}cm / {formData.weight}kg
+                            </div>
+                        </div>
+                    ) : (
+                        <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px', fontSize: '0.9rem' }}>
+                            <FiInfo style={{ marginBottom: '5px', fontSize: '1.2rem' }} /> <br/>
+                            Enter Height & Weight to calculate BMI automatically.
+                        </div>
+                    )}
+                </div>
+
+                {/* Widget 2: Profile Strength */}
+                <div style={styles.card}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h3 style={{ ...styles.sectionTitle, fontSize: '0.95rem' }}>Profile Completion</h3>
+                        <span style={{ fontWeight: '700', color: profileStrength === 100 ? '#22c55e' : '#3b82f6' }}>{profileStrength}%</span>
+                    </div>
+                    <div style={styles.progressBg}>
+                        <div style={styles.progressFill}></div>
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '10px' }}>
+                        {profileStrength < 100 ? "Complete your lifestyle & emergency details to reach 100%." : "Great job! Your profile is complete."}
+                    </p>
+                </div>
+
+                {/* Widget 3: Lifestyle Quick Edit */}
+                <div style={styles.card}>
+                    <h3 style={{ ...styles.sectionTitle, marginBottom: '15px' }}>Lifestyle Factors</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <div>
+                             <label style={styles.label}>Smoking Status</label>
+                             <select value={formData.lifestyle.smoking} onChange={(e) => handleNestedChange('lifestyle', 'smoking', e.target.value)} style={styles.select}>
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                                <option value="Occasionally">Occasionally</option>
+                             </select>
+                        </div>
+                        <div>
+                             <label style={styles.label}>Alcohol Consumption</label>
+                             <select value={formData.lifestyle.alcohol} onChange={(e) => handleNestedChange('lifestyle', 'alcohol', e.target.value)} style={styles.select}>
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                                <option value="Occasionally">Occasionally</option>
+                             </select>
+                        </div>
+                         <div>
+                             <label style={styles.label}>Activity Level</label>
+                             <select value={formData.lifestyle.activityLevel} onChange={(e) => handleNestedChange('lifestyle', 'activityLevel', e.target.value)} style={styles.select}>
+                                <option value="Sedentary">Sedentary</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="Active">Active</option>
+                             </select>
+                        </div>
+                    </div>
+                </div>
+                
+                 {/* Widget 4: Emergency Contact */}
+                <div style={{ ...styles.card, backgroundColor: '#fef2f2', borderColor: '#fecaca' }}>
+                    <h3 style={{ ...styles.sectionTitle, color: '#991b1b', marginBottom: '15px' }}>In Case of Emergency</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <input placeholder="Contact Name" value={formData.emergencyContact.name} onChange={(e) => handleNestedChange('emergencyContact', 'name', e.target.value)} style={{ ...styles.input, borderColor: '#fca5a5' }} />
+                        <input placeholder="Phone Number" value={formData.emergencyContact.phone} onChange={(e) => handleNestedChange('emergencyContact', 'phone', e.target.value)} style={{ ...styles.input, borderColor: '#fca5a5' }} />
+                        <input placeholder="Relationship" value={formData.emergencyContact.relation} onChange={(e) => handleNestedChange('emergencyContact', 'relation', e.target.value)} style={{ ...styles.input, borderColor: '#fca5a5' }} />
+                    </div>
+                </div>
+
+            </div>
+        </div>
       </form>
+      
+      {/* Print Media Query */}
+      <style>{`
+        @media (max-width: 900px) {
+            .responsive-grid { grid-template-columns: 1fr !important; }
+        }
+        @media print {
+            body * { visibility: hidden; }
+            .printable-card, .printable-card * { visibility: visible; }
+            .printable-card { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none !important; border: 1px solid #000; }
+        }
+      `}</style>
     </div>
   );
 };

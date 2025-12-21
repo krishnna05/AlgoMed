@@ -7,7 +7,6 @@ const FindDoctors = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Booking Modal State
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [bookingData, setBookingData] = useState({
     date: '',
@@ -29,8 +28,8 @@ const FindDoctors = () => {
     } else {
       const lowerQuery = searchQuery.toLowerCase();
       const filtered = doctors.filter(doc => 
-        doc.name.toLowerCase().includes(lowerQuery) || 
-        doc.specialization.toLowerCase().includes(lowerQuery)
+        (doc.name || '').toLowerCase().includes(lowerQuery) || 
+        (doc.specialization || '').toLowerCase().includes(lowerQuery)
       );
       setFilteredDoctors(filtered);
     }
@@ -51,6 +50,7 @@ const FindDoctors = () => {
   // --- Booking Logic ---
 
   const handleBookClick = (doctor) => {
+    console.log("Booking clicked for:", doctor.name);
     setSelectedDoctor(doctor);
     setBookingData({ date: '', timeSlot: '', type: 'Online', reason: '' });
     setAvailableSlots([]);
@@ -67,17 +67,18 @@ const FindDoctors = () => {
 
     if (!dateStr || !selectedDoctor) return;
 
-    // 1. Get day of week from date (e.g., "Monday")
+    // 1. Get day of week from date 
     const dateObj = new Date(dateStr);
     const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
 
     // 2. Find doctor's availability for this day
-    const daySchedule = selectedDoctor.availableSlots.find(s => s.day === dayName);
+    const slots = selectedDoctor.availableSlots || [];
+    const daySchedule = slots.find(s => s.day === dayName);
 
     if (daySchedule) {
       // 3. Generate 30 min slots between startTime and endTime
-      const slots = generateTimeSlots(daySchedule.startTime, daySchedule.endTime);
-      setAvailableSlots(slots);
+      const timeSlots = generateTimeSlots(daySchedule.startTime, daySchedule.endTime);
+      setAvailableSlots(timeSlots);
     } else {
       setAvailableSlots([]);
     }
@@ -91,7 +92,7 @@ const FindDoctors = () => {
     while (current < endTime) {
       const timeString = current.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
       slots.push(timeString);
-      current.setMinutes(current.getMinutes() + 30); // Add 30 mins
+      current.setMinutes(current.getMinutes() + 30); 
     }
     return slots;
   };
@@ -134,7 +135,8 @@ const FindDoctors = () => {
   const containerStyle = {
     maxWidth: '1200px',
     margin: '0 auto',
-    width: '100%'
+    width: '100%',
+    paddingBottom: '40px'
   };
 
   const searchContainer = {
@@ -220,18 +222,19 @@ const FindDoctors = () => {
     fontWeight: '600',
     cursor: 'pointer',
     width: '100%',
-    transition: 'background-color 0.2s'
+    transition: 'background-color 0.2s',
+    zIndex: 1 
   };
 
   // Modal Styles
   const modalOverlay = {
     position: 'fixed',
     top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1000
+    zIndex: 2000 
   };
 
   const modalContent = {
@@ -242,7 +245,8 @@ const FindDoctors = () => {
     maxWidth: '500px',
     maxHeight: '90vh',
     overflowY: 'auto',
-    position: 'relative'
+    position: 'relative',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
   };
 
   const slotGrid = {
@@ -264,7 +268,7 @@ const FindDoctors = () => {
   });
 
   const formGroup = { marginBottom: '15px' };
-  const label = { display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '0.9rem' };
+  const label = { display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '0.9rem', color: '#34495e' };
   const input = { width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box' };
 
   return (
@@ -287,28 +291,33 @@ const FindDoctors = () => {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px' }}>Loading doctors...</div>
       ) : filteredDoctors.length === 0 ? (
-        <div style={{ textAlign: 'center', color: '#b2bec3' }}>No doctors found matching your criteria.</div>
+        <div style={{ textAlign: 'center', color: '#b2bec3', padding: '20px' }}>No doctors found matching your criteria.</div>
       ) : (
         <div style={gridStyle}>
-          {filteredDoctors.map(doc => (
-            <div key={doc._id} style={cardStyle}>
-              <div style={avatarPlaceholder}>
-                {doc.name.charAt(0)}
+          {filteredDoctors.map(doc => {
+             const displayName = doc.name || "Doctor";
+             const displayChar = displayName.charAt(0).toUpperCase();
+
+             return (
+              <div key={doc._id} style={cardStyle}>
+                <div style={avatarPlaceholder}>
+                  {displayChar}
+                </div>
+                <h3 style={docName}>{displayName}</h3>
+                <div style={docSpec}>{doc.specialization || 'General'}</div>
+                
+                <div style={docDetail}>👨‍⚕️ {doc.experience || 0} Years Exp.</div>
+                <div style={docDetail}>🏥 {doc.clinicAddress || 'Clinic Address'}</div>
+                <div style={docDetail}>💰 ₹{doc.fees || 0} Consultation Fee</div>
+
+                <div style={{ margin: '15px 0', borderTop: '1px solid #f1f2f6' }}></div>
+
+                <button style={bookBtn} onClick={() => handleBookClick(doc)}>
+                  Book Appointment
+                </button>
               </div>
-              <h3 style={docName}>{doc.name}</h3>
-              <div style={docSpec}>{doc.specialization}</div>
-              
-              <div style={docDetail}>🎓 {doc.experience} Years Exp.</div>
-              <div style={docDetail}>🏥 {doc.clinicAddress}</div>
-              <div style={docDetail}>💰 ₹{doc.fees} Consultation Fee</div>
-
-              <div style={{ margin: '15px 0', borderTop: '1px solid #f1f2f6' }}></div>
-
-              <button style={bookBtn} onClick={() => handleBookClick(doc)}>
-                Book Appointment
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -316,7 +325,10 @@ const FindDoctors = () => {
       {selectedDoctor && (
         <div style={modalOverlay} onClick={closeBookingModal}>
           <div style={modalContent} onClick={e => e.stopPropagation()}>
-            <h2 style={{ marginBottom: '20px', color: '#2c3e50' }}>Book Dr. {selectedDoctor.name}</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ margin: 0, color: '#2c3e50' }}>Book Dr. {selectedDoctor.name || 'Doctor'}</h2>
+                <button onClick={closeBookingModal} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#95a5a6' }}>×</button>
+            </div>
             
             {bookingStatus.message && (
               <div style={{ 
@@ -357,7 +369,7 @@ const FindDoctors = () => {
                       ))}
                     </div>
                   ) : (
-                    <div style={{ color: '#e74c3c', fontStyle: 'italic', fontSize: '0.9rem' }}>
+                    <div style={{ color: '#e74c3c', fontStyle: 'italic', fontSize: '0.9rem', backgroundColor: '#fff5f5', padding: '10px', borderRadius: '6px' }}>
                       No slots available on this day. Please choose another date.
                     </div>
                   )}
@@ -392,7 +404,7 @@ const FindDoctors = () => {
                 <button 
                   type="button" 
                   onClick={closeBookingModal}
-                  style={{ flex: 1, padding: '12px', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: 'white', cursor: 'pointer' }}
+                  style={{ flex: 1, padding: '12px', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: 'white', cursor: 'pointer', fontWeight: '500' }}
                 >
                   Cancel
                 </button>
