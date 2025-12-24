@@ -15,6 +15,7 @@ import FindDoctors from './pages/FindDoctors';
 import MyAppointments from './pages/MyAppointments';
 import DoctorProfile from './pages/DoctorProfile';
 import PatientProfile from './pages/PatientProfile';
+import AIChat from './pages/AIChat'; 
 
 const HomeRedirect = () => {
   const { user, loading } = useAuth();
@@ -42,6 +43,7 @@ const App = () => {
           <Route element={<PrivateRoute allowedRoles={['doctor']} />}>
             <Route element={<DashboardLayout />}>
               <Route path="/doctor" element={<DoctorDashboard />} />
+              <Route path="/doctor/ai" element={<AIChat />} /> {/* NEW ROUTE */}
               <Route path="/doctor/appointments" element={<MyAppointments />} />
               <Route path="/doctor/profile" element={<DoctorProfile />} />
             </Route>
@@ -51,6 +53,7 @@ const App = () => {
           <Route element={<PrivateRoute allowedRoles={['patient']} />}>
             <Route element={<DashboardLayout />}>
               <Route path="/patient" element={<PatientDashboard />} />
+              <Route path="/patient/ai" element={<AIChat />} /> {/* NEW ROUTE */}
               <Route path="/patient/find-doctors" element={<FindDoctors />} />
               <Route path="/patient/appointments" element={<MyAppointments />} />
               <Route path="/patient/profile" element={<PatientProfile />} />

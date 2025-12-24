@@ -29,7 +29,7 @@ const DEMO_DOCTOR_DATA = {
 };
 
 const DoctorProfile = () => {
-    const { user } = useAuth(); // Get logged-in user details
+    const { user } = useAuth(); 
     
     // --- State Management ---
     const [activeTab, setActiveTab] = useState('general');

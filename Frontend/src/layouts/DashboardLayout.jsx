@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
-import AIChatWidget from './AIChatWidget';
+// Removed AIChatWidget import
 
 const DashboardLayout = () => {
   const layoutContainer = {
@@ -34,8 +34,8 @@ const DashboardLayout = () => {
           <Outlet />
         </main>
       </div>
-
-      <AIChatWidget />
+      
+      {/* AIChatWidget removed for cleaner menu-based integration */}
     </div>
   );
 };

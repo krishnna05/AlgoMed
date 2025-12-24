@@ -87,11 +87,9 @@ const DoctorDashboard = () => {
         try {
             await getDoctorProfileMe();
 
-            // Fetch Appointments from Real Database
             const apptRes = await getMyAppointments();
             const allAppts = apptRes.data || [];
             
-            // Filter Today & Remove Duplicates
             const today = new Date().toDateString();
             
             let todaysList = allAppts.filter(appt =>
@@ -99,20 +97,15 @@ const DoctorDashboard = () => {
                 appt.status !== 'Cancelled'
             );
 
-            // Remove Duplicates 
             const uniqueAppts = Array.from(new Map(todaysList.map(item => [item._id, item])).values());
 
-            // Sort by Time Slot
             uniqueAppts.sort((a, b) => a.timeSlot.localeCompare(b.timeSlot));
             
-            // Update State with Real Data
             updateDashboardState(uniqueAppts);
 
-            // Fetch Analytics from Real Database
             const analyticsRes = await getDoctorAnalytics();
             setAnalyticsData(analyticsRes.data);
             
-            // Turn off demo mode if we were in it (resetting to real data)
             setIsDemoMode(false);
 
         } catch (error) {
@@ -122,7 +115,6 @@ const DoctorDashboard = () => {
         }
     };
 
-    // Helper to update state and calculate stats 
     const updateDashboardState = (appointments) => {
         setTodayAppointments(appointments);
         setPriorityStats({
@@ -135,7 +127,6 @@ const DoctorDashboard = () => {
     // --- CLIENT-SIDE DEMO LOADER ---
     const loadDemoData = () => {
         if (isDemoMode) {
-            // If already in demo mode, reload real data
             fetchDashboardData();
             return;
         }

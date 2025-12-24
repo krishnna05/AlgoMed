@@ -1,7 +1,10 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiGrid, FiUsers, FiCalendar, FiActivity, FiSettings, FiLogOut } from 'react-icons/fi';
+import { 
+    FiGrid, FiUsers, FiCalendar, FiActivity, 
+    FiSettings, FiCpu // Imported FiCpu for the AI icon
+} from 'react-icons/fi';
 
 const Sidebar = () => {
   const { user } = useAuth();
@@ -23,11 +26,10 @@ const Sidebar = () => {
     height: '80px',
     display: 'flex',
     alignItems: 'center',
-    padding: '0 28px', // Slightly increased padding
+    padding: '0 28px',
     borderBottom: '1px solid #f1f5f9'
   };
 
-  // --- Logo Styles ---
   const logoWrapper = {
     display: 'flex',
     alignItems: 'center',
@@ -37,14 +39,14 @@ const Sidebar = () => {
   const logoIconBox = {
     width: '38px',
     height: '38px',
-    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', // Modern blue gradient
+    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
     borderRadius: '10px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     color: '#ffffff',
     fontSize: '1.25rem',
-    boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)', // Soft shadow/glow
+    boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)',
     flexShrink: 0
   };
 
@@ -88,6 +90,7 @@ const Sidebar = () => {
   if (user?.role === 'patient') {
     menuItems = [
       { path: '/patient', label: 'Dashboard', icon: <FiGrid /> },
+      { path: '/patient/ai', label: 'AlgoMed AI', icon: <FiCpu /> }, // NEW
       { path: '/patient/find-doctors', label: 'Find Doctors', icon: <FiUsers /> },
       { path: '/patient/appointments', label: 'My Appointments', icon: <FiCalendar /> },
       { path: '/patient/profile', label: 'Medical Profile', icon: <FiActivity /> },
@@ -95,6 +98,7 @@ const Sidebar = () => {
   } else if (user?.role === 'doctor') {
     menuItems = [
       { path: '/doctor', label: 'Overview', icon: <FiGrid /> },
+      { path: '/doctor/ai', label: 'AlgoMed AI', icon: <FiCpu /> }, // NEW
       { path: '/doctor/appointments', label: 'Schedule', icon: <FiCalendar /> },
       { path: '/doctor/profile', label: 'Profile & Settings', icon: <FiSettings /> },
     ];

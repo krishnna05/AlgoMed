@@ -7,7 +7,7 @@ import { FiDatabase, FiCalendar, FiClock, FiMapPin, FiVideo } from 'react-icons/
 const DEMO_SCHEDULE_DATA = [
   {
     _id: 'demo_1',
-    appointmentDate: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(), // Tomorrow
+    appointmentDate: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(), 
     timeSlot: '10:00 AM',
     type: 'Online',
     status: 'Scheduled',
@@ -18,7 +18,7 @@ const DEMO_SCHEDULE_DATA = [
   },
   {
     _id: 'demo_2',
-    appointmentDate: new Date().toISOString(), // Today
+    appointmentDate: new Date().toISOString(), 
     timeSlot: '02:30 PM',
     type: 'Offline',
     status: 'Scheduled',
@@ -28,7 +28,7 @@ const DEMO_SCHEDULE_DATA = [
   },
   {
     _id: 'demo_3',
-    appointmentDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), // 2 Days Ago
+    appointmentDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), 
     timeSlot: '11:00 AM',
     type: 'Online',
     status: 'Completed',
@@ -38,7 +38,7 @@ const DEMO_SCHEDULE_DATA = [
   },
   {
     _id: 'demo_4',
-    appointmentDate: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(), // 5 Days Ago
+    appointmentDate: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(), 
     timeSlot: '04:00 PM',
     type: 'Offline',
     status: 'Cancelled',
@@ -48,7 +48,7 @@ const DEMO_SCHEDULE_DATA = [
   },
   {
     _id: 'demo_5',
-    appointmentDate: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString(), // 3 Days Later
+    appointmentDate: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString(), 
     timeSlot: '09:00 AM',
     type: 'Online',
     status: 'Scheduled',
@@ -313,7 +313,6 @@ const MyAppointments = () => {
         <div style={listContainer}>
           {filteredAppointments.map(appt => {
             const dateObj = new Date(appt.appointmentDate);
-            // Determine who to show: If I'm patient, show Doctor name. If I'm Doctor, show Patient name.
             const otherPartyName = user.role === 'patient' ? appt.doctorId?.name : appt.patientId?.name;
             const otherPartyLabel = user.role === 'patient' ? 'Doctor' : 'Patient';
 

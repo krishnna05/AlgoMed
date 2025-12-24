@@ -22,7 +22,7 @@ const HEALTH_TIPS = [
 // --- DEMO DATA ---
 const DEMO_DATA = {
     nextAppointment: {
-        appointmentDate: new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+        appointmentDate: new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toISOString(), 
         doctorId: { name: "Anjali Gupta" },
         reason: "Routine Cardiac Checkup",
         type: "Online",
@@ -102,7 +102,7 @@ const PatientDashboard = () => {
     // --- DEMO LOADER ---
     const toggleDemoData = () => {
         if (isDemoMode) {
-            fetchDashboardData(); // Reset to real data
+            fetchDashboardData(); 
         } else {
             setLoading(true);
             setTimeout(() => {
@@ -166,8 +166,8 @@ const PatientDashboard = () => {
         tipCard: {
             background: 'linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)',
             padding: '16px 20px', borderRadius: '16px',
-            border: '1px solid #22c55e', // Green border
-            boxShadow: '0 0 15px rgba(34, 197, 94, 0.3)', // Glowing green shadow
+            border: '1px solid #22c55e', 
+            boxShadow: '0 0 15px rgba(34, 197, 94, 0.3)', 
             maxWidth: '450px',
             display: 'flex', gap: '15px', alignItems: 'flex-start',
             transition: 'transform 0.2s ease',
@@ -203,7 +203,7 @@ const PatientDashboard = () => {
             boxShadow: '0 10px 25px -5px rgba(59, 130, 246, 0.4)' // Blue Glow
         },
         
-        // Hero Card (Active Appointment)
+        // Hero Card 
         heroCard: {
             background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
             color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
@@ -251,7 +251,7 @@ const PatientDashboard = () => {
                     <FiDatabase /> {isDemoMode ? 'Exit Demo' : 'Load Demo Data'}
                 </button>
 
-                {/* UPDATED: Glowing Health Tip */}
+                {/* Health Tip */}
                 <div style={styles.tipCard} className="hover-lift">
                     <div style={styles.tipIconBox}><FiZap size={20} /></div>
                     <div style={styles.tipContent}>
