@@ -1,31 +1,30 @@
 require("dotenv").config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
+if (!process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY missing");
+}
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const getGeminiResponse = async (message) => {
-    const models = ["gemini-1.5-pro", "gemini-1.5-flash"];
+async function getGeminiResponse(message) {
+    try {
+        console.log("➡️ Gemini request:", message);
 
-    for (const modelName of models) {
-        try {
-            console.log(`Attempting with model: ${modelName}...`);
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.5-flash",
+        });
 
-            const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(message);
+        const text = result.response.text();
 
-            const result = await model.generateContent(message);
-            const response = await result.response;
-            const text = response.text();
+        console.log("✅ Gemini success");
+        return text;
 
-            return text;
-
-        } catch (err) {
-            console.warn(`Model ${modelName} failed:`, err.message);
-            
-            if (modelName === models[models.length - 1]) {
-                return "Sorry, I am unable to process your request with any available models.";
-            }
-        }
+    } catch (err) {
+        console.error("❌ Gemini FULL error:", err);
+        return "AI service is temporarily unavailable.";
     }
-};
+}
 
 module.exports = getGeminiResponse;

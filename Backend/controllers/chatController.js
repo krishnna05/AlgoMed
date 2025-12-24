@@ -3,11 +3,11 @@ const getGeminiResponse = require('../utils/gemini');
 
 const processAIChat = async (req, res, next) => {
     try {
-        const { message, threadId } = req.body;
+        const { message, threadId, image, mimeType } = req.body;
 
-        if (!message) {
+        if (!message && !image) {
             res.status(400);
-            throw new Error("Message is required");
+            throw new Error("Message or file is required");
         }
 
         let chatLog;
@@ -21,18 +21,32 @@ const processAIChat = async (req, res, next) => {
         if (!chatLog) {
             chatLog = await ChatLog.create({
                 userId: req.user.id,
-                title: message.substring(0, 30) + "...", 
+                title: message ? (message.substring(0, 30) + "...") : "Medical Report Analysis", 
                 messages: []
             });
         }
 
         // 3. Add User Message to History
-        chatLog.messages.push({ role: "user", content: message });
+        // Note: We currently store text. For images, we can add a placeholder text or store the base64 if needed (storage heavy).
+        // For now, we'll note that an image was sent.
+        const userContent = image ? `${message} [Attached: Medical Report]` : message;
+        chatLog.messages.push({ role: "user", content: userContent });
 
-        // 4. Get Response from AI (Updated function call)
-        const aiReply = await getGeminiResponse(message);
+        // 4. Prepare Image Part for Gemini (if exists)
+        let imagePart = null;
+        if (image && mimeType) {
+            imagePart = {
+                inlineData: {
+                    data: image,
+                    mimeType: mimeType
+                }
+            };
+        }
 
-        // 5. Add AI Message to History
+        // 5. Get Response from AI
+        const aiReply = await getGeminiResponse(message || "Analyze this image", imagePart);
+
+        // 6. Add AI Message to History
         chatLog.messages.push({ role: "assistant", content: aiReply });
         
         // Update timestamp
