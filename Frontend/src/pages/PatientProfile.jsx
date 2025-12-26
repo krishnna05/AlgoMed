@@ -176,7 +176,7 @@ const PatientProfile = () => {
       {/* --- HEADER SECTION --- */}
       <div className="header-flex">
         <div style={{ flex: 1 }}>
-            <h1 className="page-title" style={{ fontSize: '1.75rem', fontWeight: '800', color: '#1e293b', margin: '0', letterSpacing: '-1px', lineHeight: '1.2' }}>My Health Profile</h1>
+            <h1 className="page-title" style={{ fontSize: '1.75rem', fontWeight: '800', color: '#1e293b', margin: '0', letterSpacing: '-1px' }}>Health Profile</h1>
             <p className="sub-title">Manage your medical history and vital stats securely.</p>
         </div>
         <div className="header-actions">
@@ -443,7 +443,7 @@ const PatientProfile = () => {
         .vitals-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
         .id-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
         .id-item { background: rgba(255,255,255,0.1); padding: 10px; borderRadius: 8px; backdrop-filter: blur(5px); }
-        .page-title { fontSize: 2.25rem; fontWeight: 800; color: #1e293b; margin: 0; letter-spacing: -1px; line-height: 1.2; }
+        .page-title { fontSize: 2rem; fontWeight: 900; color: #1e293b; margin: 0; letter-spacing: -1px; line-height: 1.2; }
         .sub-title { color: #64748b; margin-top: 4px; fontSize: 0.9rem; margin-bottom: 0; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         
@@ -458,10 +458,10 @@ const PatientProfile = () => {
 
         @media (max-width: 768px) {
             .mobile-scaler {
-                width: 125%; /* Inverse of 0.8 to fill screen width */
-                transform: scale(0.8);
+                width: 112%; 
+                transform: scale(0.9);
                 transform-origin: top left;
-                margin-bottom: -20%; /* Remove whitespace at bottom caused by scaling */
+                margin-bottom: -20%; 
             }
 
             .header-flex { flex-direction: column; align-items: stretch; gap: 10px; }

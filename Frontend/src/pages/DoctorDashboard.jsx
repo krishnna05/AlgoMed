@@ -463,14 +463,13 @@ const DoctorDashboard = () => {
                 @media (max-width: 768px) {
                     .main-container { 
                         padding: 16px 12px; 
-                        /* ZOOM EFFECT: Reduces all elements to 80% size on mobile */
-                        zoom: 0.8;
+                        zoom: 0.9;
                     }
 
                     .header-container { flex-direction: column; }
                     .header-container > div { width: 100%; justify-content: space-between; }
  
-                    .greeting-text { font-size: 1.3rem; }
+                    .greeting-text { font-size: 1.5rem; }
 
                     .header-actions { width: 100%; margin-top: 16px; }
                     .view-switcher { width: 100%; display: flex; }

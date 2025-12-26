@@ -314,10 +314,14 @@ const MyAppointments = () => {
 
         /* --- MOBILE RESPONSIVE --- */
         @media (max-width: 768px) {
-            .app-container { padding: 10px; padding-bottom: 80px; }
+            .app-container { 
+                padding: 10px; 
+                padding-bottom: 80px;
+                zoom: 0.9; 
+            }
 
             .header-section { margin-bottom: 16px; gap: 12px; }
-            .page-title { font-size: 1.25rem; } 
+            .page-title { font-size: 1.5rem; } 
             .page-subtitle { font-size: 0.75rem; }
 
             .controls-container { width: 100%; overflow: hidden; }

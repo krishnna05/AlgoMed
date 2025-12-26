@@ -20,7 +20,8 @@ const Navbar = ({ onMenuClick, isMobile }) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: isMobile ? '0 16px' : '0 24px',
+      // Reduced side padding slightly on mobile for better spacing
+      padding: isMobile ? '0 12px' : '0 24px', 
       position: 'sticky',
       top: 0,
       zIndex: 50
@@ -28,9 +29,10 @@ const Navbar = ({ onMenuClick, isMobile }) => {
     leftSection: {
       display: 'flex',
       alignItems: 'center',
-      gap: '12px',
+      gap: isMobile ? '8px' : '12px', // Tighter gap on mobile
       flex: 1,
-      maxWidth: '400px'
+      // On mobile, let it fill the space. On desktop, cap it.
+      maxWidth: isMobile ? '100%' : '400px' 
     },
     menuBtn: {
       display: isMobile ? 'flex' : 'none',
@@ -41,14 +43,18 @@ const Navbar = ({ onMenuClick, isMobile }) => {
       fontSize: '1.2rem',
       color: '#3b82f6',
       cursor: 'pointer',
-      padding: '4px'
+      // FIX: Fixed dimensions ensure perfect vertical centering relative to search bar
+      width: '40px', 
+      height: '40px',
+      padding: 0,
+      flexShrink: 0 // Prevents button from squishing
     },
     searchContainer: {
       display: 'flex',
       alignItems: 'center',
       backgroundColor: '#f1f5f9',
       borderRadius: '6px',
-      padding: '6px 12px',
+      padding: '8px 12px', // Increased vertical padding slightly for better visual balance
       flex: 1,
     },
     input: {
@@ -59,13 +65,17 @@ const Navbar = ({ onMenuClick, isMobile }) => {
       width: '100%',
       color: '#1e293b',
       fontSize: '0.85rem',
-      minWidth: 0
+      minWidth: 0,
+      // FIX: Removes browser default margins that shift text
+      margin: 0, 
+      padding: 0 
     },
     actionGroup: {
       display: 'flex',
       alignItems: 'center',
       gap: isMobile ? '12px' : '16px',
-      flexShrink: 0
+      flexShrink: 0,
+      marginLeft: isMobile ? '12px' : '0' // Ensure space between search and icons
     },
     iconBtn: {
       background: 'transparent',
@@ -76,12 +86,15 @@ const Navbar = ({ onMenuClick, isMobile }) => {
       position: 'relative',
       display: 'flex',
       alignItems: 'center',
-      padding: '4px'
+      padding: '4px',
+      justifyContent: 'center',
+      height: '32px', // Fixed height for alignment
+      width: '32px'
     },
     badge: {
       position: 'absolute',
-      top: '2px',
-      right: '2px',
+      top: '4px', // Adjusted to fit inside the new fixed height
+      right: '4px',
       width: '6px',
       height: '6px',
       backgroundColor: '#ef4444',
@@ -103,7 +116,7 @@ const Navbar = ({ onMenuClick, isMobile }) => {
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
-      padding: isMobile ? '8px' : '4px'
+      padding: isMobile ? '4px' : '4px 8px'
     },
     logoutText: {
       display: isMobile ? 'none' : 'block'

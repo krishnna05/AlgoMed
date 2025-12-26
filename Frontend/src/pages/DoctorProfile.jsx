@@ -203,7 +203,7 @@ const DoctorProfile = () => {
                     align-items: center;
                     margin-bottom: 20px;
                 }
-                .page-title { font-size: 28px; font-weight: 700; color: var(--text-main); margin: 0; }
+                .page-title { font-size: 29px; font-weight: 800; color: var(--text-main); margin: 0; }
                 .page-subtitle { color: var(--text-muted); margin: 4px 0 0; font-size: 15px; }
 
                 .btn {
