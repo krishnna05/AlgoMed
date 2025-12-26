@@ -1,5 +1,5 @@
 const DoctorProfile = require("../models/DoctorProfile");
-const User = require("../models/User");
+const User = require("../models/user");
 
 const getAllDoctors = async (req, res, next) => {
   try {
