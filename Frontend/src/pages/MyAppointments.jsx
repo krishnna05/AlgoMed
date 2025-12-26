@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { getMyAppointments, updateAppointmentStatus } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { FiDatabase, FiCalendar, FiClock, FiMapPin, FiVideo } from 'react-icons/fi';
+import { FiClock, FiMapPin, FiVideo, FiCalendar } from 'react-icons/fi';
 
 // --- DEMO DATA CONSTANTS ---
 const DEMO_SCHEDULE_DATA = [
   {
     _id: 'demo_1',
-    appointmentDate: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(), 
+    appointmentDate: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(),
     timeSlot: '10:00 AM',
     type: 'Online',
     status: 'Scheduled',
@@ -18,7 +18,7 @@ const DEMO_SCHEDULE_DATA = [
   },
   {
     _id: 'demo_2',
-    appointmentDate: new Date().toISOString(), 
+    appointmentDate: new Date().toISOString(),
     timeSlot: '02:30 PM',
     type: 'Offline',
     status: 'Scheduled',
@@ -28,7 +28,7 @@ const DEMO_SCHEDULE_DATA = [
   },
   {
     _id: 'demo_3',
-    appointmentDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), 
+    appointmentDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
     timeSlot: '11:00 AM',
     type: 'Online',
     status: 'Completed',
@@ -38,7 +38,7 @@ const DEMO_SCHEDULE_DATA = [
   },
   {
     _id: 'demo_4',
-    appointmentDate: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(), 
+    appointmentDate: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(),
     timeSlot: '04:00 PM',
     type: 'Offline',
     status: 'Cancelled',
@@ -48,7 +48,7 @@ const DEMO_SCHEDULE_DATA = [
   },
   {
     _id: 'demo_5',
-    appointmentDate: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString(), 
+    appointmentDate: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString(),
     timeSlot: '09:00 AM',
     type: 'Online',
     status: 'Scheduled',
@@ -63,7 +63,7 @@ const MyAppointments = () => {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('All'); 
+  const [filter, setFilter] = useState('All');
   const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
@@ -106,188 +106,33 @@ const MyAppointments = () => {
 
     try {
       await updateAppointmentStatus(id, { status: newStatus });
-      fetchAppointments(); 
+      fetchAppointments();
     } catch (error) {
       alert("Failed to update status");
       console.error(error);
     }
   };
 
-  // Filter Logic
   const filteredAppointments = appointments.filter(appt => {
     if (filter === 'All') return true;
     return appt.status === filter;
   });
 
-  // --- Styles ---
-  const containerStyle = {
-    maxWidth: '1000px',
-    margin: '0 auto',
-    width: '100%',
-    paddingBottom: '40px'
-  };
-
-  const headerStyle = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '25px',
-    flexWrap: 'wrap',
-    gap: '15px'
-  };
-
-  const titleStyle = {
-    fontSize: '1.8rem',
-    color: '#1e293b',
-    margin: 0,
-    fontWeight: '700'
-  };
-
-  const controlsContainer = {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '15px',
-      flexWrap: 'wrap'
-  };
-
-  const filterContainer = {
-    display: 'flex',
-    backgroundColor: '#e2e8f0',
-    padding: '4px',
-    borderRadius: '8px'
-  };
-
-  const filterBtn = (active) => ({
-    padding: '8px 16px',
-    borderRadius: '6px',
-    border: 'none',
-    backgroundColor: active ? 'white' : 'transparent',
-    color: active ? '#2563eb' : '#64748b',
-    cursor: 'pointer',
-    fontSize: '0.9rem',
-    fontWeight: '600',
-    transition: 'all 0.2s',
-    boxShadow: active ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
-  });
-
-  const demoBtn = {
-      padding: '8px 16px',
-      borderRadius: '8px',
-      border: '1px solid #6366f1',
-      backgroundColor: isDemoMode ? '#e0e7ff' : 'white',
-      color: '#6366f1',
-      cursor: 'pointer',
-      fontSize: '0.9rem',
-      fontWeight: '600',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      transition: 'all 0.2s'
-  };
-
-  const listContainer = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px'
-  };
-
-  const cardStyle = {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    padding: '20px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
-    border: '1px solid #f1f5f9',
-    display: 'flex',
-    flexDirection: 'column', 
-    gap: '15px',
-    transition: 'transform 0.2s, box-shadow 0.2s'
-  };
-
-  const cardContentStyle = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '20px'
-  };
-
-  const dateBox = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: '80px',
-    height: '80px',
-    backgroundColor: '#f8fafc',
-    borderRadius: '12px',
-    border: '1px solid #e2e8f0'
-  };
-
-  const dateDay = { fontSize: '1.8rem', fontWeight: '800', color: '#334155', lineHeight: 1 };
-  const dateMonth = { fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '600' };
-
-  const infoBox = {
-    flex: 1,
-    minWidth: '220px'
-  };
-
-  const nameStyle = { fontSize: '1.15rem', fontWeight: '700', color: '#1e293b', marginBottom: '6px' };
-  
-  const metaRow = {
-      display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '6px', fontSize: '0.9rem', color: '#64748b'
-  };
-
-  const statusBadge = (status) => {
-    let bg = '#f1f5f9';
-    let color = '#64748b';
-    
-    if(status === 'Scheduled') { bg = '#eff6ff'; color = '#2563eb'; }
-    else if(status === 'Completed') { bg = '#dcfce7'; color = '#16a34a'; }
-    else if(status === 'Cancelled') { bg = '#fee2e2'; color = '#dc2626'; }
-
-    return {
-        padding: '6px 12px',
-        borderRadius: '20px',
-        fontSize: '0.8rem',
-        fontWeight: '700',
-        textTransform: 'uppercase',
-        backgroundColor: bg,
-        color: color,
-        display: 'inline-block'
-    };
-  };
-
-  const actionBtn = (type) => ({
-    padding: '8px 16px',
-    borderRadius: '6px',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: '0.85rem',
-    fontWeight: '600',
-    backgroundColor: type === 'cancel' ? '#fff1f2' : '#f0fdf4',
-    color: type === 'cancel' ? '#e11d48' : '#16a34a',
-    transition: 'all 0.2s',
-    marginTop: '5px'
-  });
-
   return (
-    <div style={containerStyle}>
-      <div style={headerStyle}>
-        <div>
-            <h1 style={titleStyle}>Schedule</h1>
-            <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.95rem' }}>Manage your appointments and visits</p>
+    <div className="app-container">
+      <div className="header-section">
+        <div className="page-header-content">
+            <h1 className="page-title">Schedule</h1>
+            <p className="page-subtitle">Manage your appointments and visits</p>
         </div>
         
-        <div style={controlsContainer}>
-            {/* Demo Button */}
-            <button onClick={loadDemoData} style={demoBtn} title="Load sample data">
-                <FiDatabase /> {isDemoMode ? 'Demo Active' : 'Load Demo'}
-            </button>
-
-            {/* Filter Toggle */}
-            <div style={filterContainer}>
+        <div className="controls-container">
+            <div className="filter-container">
             {['All', 'Scheduled', 'Completed', 'Cancelled'].map(f => (
-                <button key={f} style={filterBtn(filter === f)} onClick={() => setFilter(f)}>
+                <button 
+                    key={f} 
+                    className={`filter-btn ${filter === f ? 'active' : ''}`}
+                    onClick={() => setFilter(f)}>
                 {f}
                 </button>
             ))}
@@ -296,89 +141,85 @@ const MyAppointments = () => {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>
-            <div style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Loading schedule...</div>
+        <div className="state-msg">
+            <div>Loading schedule...</div>
         </div>
       ) : filteredAppointments.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px', backgroundColor: 'white', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
-          <h3 style={{ color: '#334155', marginTop: 0 }}>No appointments found.</h3>
-          <p style={{ color: '#94a3b8' }}>You don't have any appointments in this category.</p>
+        <div className="empty-card">
+          <FiCalendar size={32} color="#cbd5e1" style={{ marginBottom: '10px' }} />
+          <h3 className="empty-title">No appointments found.</h3>
+          <p className="empty-text">You don't have any appointments in this category.</p>
           {!isDemoMode && (
-              <button onClick={loadDemoData} style={{ marginTop: '15px', color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+              <button onClick={loadDemoData} className="link-btn">
                   Load Demo Data
               </button>
           )}
         </div>
       ) : (
-        <div style={listContainer}>
+        <div className="list-container">
           {filteredAppointments.map(appt => {
             const dateObj = new Date(appt.appointmentDate);
             const otherPartyName = user.role === 'patient' ? appt.doctorId?.name : appt.patientId?.name;
-            const otherPartyLabel = user.role === 'patient' ? 'Doctor' : 'Patient';
 
             return (
-              <div key={appt._id} style={cardStyle}>
-                <div style={cardContentStyle}>
-                  {/* Left: Date */}
-                  <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flex: 1 }}>
-                    <div style={dateBox}>
-                        <span style={dateMonth}>{dateObj.toLocaleString('default', { month: 'short' })}</span>
-                        <span style={dateDay}>{dateObj.getDate()}</span>
+              <div key={appt._id} className="appt-card">
+                <div className="card-content">
+                  {/* Left Section: Date & Info */}
+                  <div className="top-section">
+                    <div className="date-box">
+                        <span className="date-month">{dateObj.toLocaleString('default', { month: 'short' })}</span>
+                        <span className="date-day">{dateObj.getDate()}</span>
                     </div>
 
-                    {/* Middle: Info */}
-                    <div style={infoBox}>
-                        <div style={nameStyle}>{otherPartyName || 'Unknown User'}</div>
+                    <div className="info-box">
+                        <div className="person-name">{otherPartyName || 'Unknown User'}</div>
                         
-                        <div style={metaRow}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><FiClock /> {appt.timeSlot}</span>
-                            <span style={{ color: '#cbd5e1' }}>|</span>
+                        <div className="meta-row">
+                            <span className="meta-item"><FiClock /> {appt.timeSlot}</span>
+                            <span className="divider">|</span>
                             {appt.type === 'Online' ? 
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#6366f1' }}><FiVideo /> Online</span> : 
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#059669' }}><FiMapPin /> In-Clinic</span>
+                                <span className="meta-item online"><FiVideo /> Online</span> : 
+                                <span className="meta-item offline"><FiMapPin /> Clinic</span>
                             }
                         </div>
                         
-                        <div style={{ fontSize: '0.9rem', color: '#475569', marginTop: '6px' }}>
-                            <span style={{ fontWeight: '600' }}>Reason:</span> {appt.reason}
+                        <div className="reason-text">
+                            <span className="reason-label">Reason:</span> {appt.reason}
                         </div>
 
                         {appt.videoLink && appt.status === 'Scheduled' && (
-                        <a href={appt.videoLink} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', marginTop: '8px', color: '#2563eb', fontSize: '0.9rem', textDecoration: 'none', fontWeight: '500' }}>
+                        <a href={appt.videoLink} target="_blank" rel="noreferrer" className="video-link">
                             <FiVideo /> Join Video Call
                         </a>
                         )}
                     </div>
                   </div>
 
-                  {/* Right: Status & Actions */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px', minWidth: '140px' }}>
-                    <span style={statusBadge(appt.status)}>{appt.status}</span>
+                  {/* Right/Bottom Section: Status & Actions */}
+                  <div className="action-section">
+                    <span className={`status-badge ${appt.status.toLowerCase()}`}>{appt.status}</span>
 
-                    {/* Logic for Buttons */}
                     {appt.status === 'Scheduled' && (
-                      <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'flex-end' }}>
-                        {/* Patient can Cancel */}
+                      <div className="btn-group">
                         {user.role === 'patient' && (
                           <button 
-                            style={actionBtn('cancel')}
+                            className="action-btn cancel"
                             onClick={() => handleStatusUpdate(appt._id, 'Cancelled')}
                           >
                             Cancel Visit
                           </button>
                         )}
 
-                        {/* Doctor can Mark Complete or Cancel */}
                         {user.role === 'doctor' && (
                           <>
                             <button 
-                              style={actionBtn('complete')}
+                              className="action-btn complete"
                               onClick={() => handleStatusUpdate(appt._id, 'Completed')}
                             >
-                              Mark Completed
+                              Mark Done
                             </button>
                             <button 
-                              style={actionBtn('cancel')}
+                              className="action-btn cancel"
                               onClick={() => handleStatusUpdate(appt._id, 'Cancelled')}
                             >
                               Cancel
@@ -394,6 +235,131 @@ const MyAppointments = () => {
           })}
         </div>
       )}
+
+      {/* --- CSS --- */}
+      <style>{`
+        /* DESKTOP DEFAULTS */
+        .app-container { max-width: 850px; margin: 0 auto; width: 100%; padding: 0 0 30px 0; font-family: 'Inter', sans-serif; }
+        
+        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
+        .page-header-content { flex: 1; }
+        .page-title { font-size: 1.75rem; font-weight: 800; color: #1e293b; margin: 0; line-height: 1.2; }
+        .page-subtitle { margin: 4px 0 0; color: #64748b; font-size: 0.85rem; }
+
+        /* TOGGLE BAR */
+        .controls-container { display: flex; align-items: center; }
+        .filter-container { display: inline-flex; background-color: #f1f5f9; padding: 4px; border-radius: 10px; gap: 4px; border: 1px solid #e2e8f0; }
+        .filter-btn { padding: 6px 14px; border-radius: 7px; border: none; background-color: transparent; color: #64748b; cursor: pointer; font-size: 0.85rem; font-weight: 500; white-space: nowrap; transition: all 0.2s ease-in-out; position: relative; }
+        .filter-btn:hover:not(.active) { background-color: rgba(0,0,0,0.03); color: #475569; }
+        .filter-btn.active { background-color: white; color: #2563eb; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06); }
+
+        /* CARDS */
+        .list-container { display: flex; flex-direction: column; gap: 12px; }
+        .appt-card { background-color: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border: 1px solid #f1f5f9; transition: transform 0.2s; }
+        .card-content { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
+        
+        .top-section { display: flex; gap: 15px; align-items: flex-start; flex: 1; min-width: 0; }
+        
+        .date-box { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 60px; height: 60px; background-color: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; flex-shrink: 0; }
+        .date-day { font-size: 1.3rem; font-weight: 700; color: #334155; line-height: 1; }
+        .date-month { font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 600; margin-top: 2px; }
+
+        .info-box { flex: 1; min-width: 0; }
+        .person-name { font-size: 1rem; font-weight: 600; color: #1e293b; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .meta-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 0.8rem; color: #64748b; flex-wrap: wrap; }
+        .meta-item { display: flex; align-items: center; gap: 4px; }
+        .meta-item.online { color: #6366f1; background: #eff6ff; padding: 2px 6px; border-radius: 4px; font-weight: 500;}
+        .meta-item.offline { color: #059669; background: #ecfdf5; padding: 2px 6px; border-radius: 4px; font-weight: 500;}
+        .divider { color: #cbd5e1; font-size: 0.7rem; }
+        
+        .reason-text { font-size: 0.85rem; color: #475569; background: #f8fafc; padding: 6px; border-radius: 6px; display: inline-block; margin-top: 4px; max-width: 100%; word-wrap: break-word;}
+        .reason-label { font-weight: 600; }
+        .video-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; color: #2563eb; font-size: 0.8rem; text-decoration: none; font-weight: 500; padding: 4px 8px; background: #eff6ff; border-radius: 6px; }
+
+        .action-section { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; min-width: 100px; }
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
+        .status-badge.scheduled { background-color: #dbeafe; color: #1e40af; }
+        .status-badge.completed { background-color: #dcfce7; color: #166534; }
+        .status-badge.cancelled { background-color: #fee2e2; color: #991b1b; }
+
+        .btn-group { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+        .action-btn { padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.75rem; font-weight: 500; transition: all 0.2s; width: 100%; text-align: center; }
+        .action-btn.cancel { background-color: white; color: #e11d48; border: 1px solid #ffe4e6; }
+        .action-btn.cancel:hover { background-color: #fff1f2; }
+        .action-btn.complete { background-color: #16a34a; color: white; }
+        .action-btn.complete:hover { background-color: #15803d; }
+
+        .empty-card { text-align: center; padding: 40px; background-color: white; border-radius: 12px; border: 1px dashed #cbd5e1; display: flex; flex-direction: column; align-items: center; }
+        .empty-title { color: #334155; margin: 0 0 8px 0; font-size: 1.1rem; }
+        .empty-text { color: #94a3b8; font-size: 0.9rem; margin: 0; }
+        .state-msg { text-align: center; padding: 40px; color: #94a3b8; }
+
+        .link-btn { 
+          margin-top: 14px; 
+          color: #2563eb; 
+          background: transparent; 
+          border: 1px solid transparent; 
+          cursor: pointer; 
+          text-decoration: none; 
+          font-size: 0.9rem; 
+          font-weight: 600;
+          padding: 8px 16px;
+          border-radius: 6px;
+          transition: background 0.2s;
+        }
+        .link-btn:hover {
+            background-color: #eff6ff;
+            text-decoration: underline;
+        }
+
+        /* --- MOBILE RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .app-container { padding: 10px; padding-bottom: 80px; }
+
+            .header-section { margin-bottom: 16px; gap: 12px; }
+            .page-title { font-size: 1.25rem; } 
+            .page-subtitle { font-size: 0.75rem; }
+
+            .controls-container { width: 100%; overflow: hidden; }
+            .filter-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+            .filter-container::-webkit-scrollbar { display: none; }
+            .filter-btn { padding: 5px 12px; font-size: 0.75rem; flex-shrink: 0; }
+
+            .appt-card { padding: 12px; } 
+            .card-content { flex-direction: column; gap: 12px; } 
+            
+            .top-section { width: 100%; gap: 10px; }
+            
+            .date-box { width: 48px; height: 48px; border-radius: 8px; }
+            .date-day { font-size: 1.1rem; }
+            .date-month { font-size: 0.6rem; }
+
+            .person-name { font-size: 0.95rem; margin-bottom: 4px; }
+            .meta-row { font-size: 0.75rem; gap: 8px; margin-bottom: 4px; }
+            .reason-text { font-size: 0.75rem; padding: 5px; }
+            .video-link { font-size: 0.75rem; margin-top: 6px; width: fit-content; }
+
+            .action-section { 
+                width: 100%; 
+                flex-direction: row; 
+                justify-content: space-between; 
+                align-items: center; 
+                padding-top: 10px; 
+                border-top: 1px solid #f1f5f9; 
+            }
+            
+            .btn-group { 
+                flex-direction: row; 
+                width: auto; 
+                gap: 8px; 
+            }
+            .action-btn { 
+                width: auto; 
+                padding: 6px 12px; 
+                font-size: 0.7rem; 
+            }
+        }
+      `}</style>
     </div>
   );
 };

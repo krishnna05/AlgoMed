@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getMyAppointments, getDoctorProfileMe, getDoctorAnalytics } from '../services/api';
-import { FiClock, FiAlertTriangle, FiCheckCircle, FiPlay, FiGrid, FiPieChart, FiAward, FiStar, FiInfo, FiXCircle, FiVideo, FiMapPin, FiDatabase } from 'react-icons/fi';
+import { 
+  FiClock, FiAlertTriangle, FiCheckCircle, FiPlay, FiGrid, 
+  FiPieChart, FiAward, FiStar, FiInfo, FiXCircle, FiVideo, 
+  FiMapPin
+} from 'react-icons/fi';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import PatientSnapshotDrawer from '../components/PatientSnapshotDrawer';
 import ConsultationModal from '../components/ConsultationModal';
 
-// --- DEMO DATA CONSTANTS (Client-Side Only) ---
+// --- DEMO DATA CONSTANTS ---
 const DEMO_APPOINTMENTS = [
   {
     _id: 'demo_1',
@@ -23,7 +27,7 @@ const DEMO_APPOINTMENTS = [
     patientId: { _id: 'p2', name: 'Rahul Yadav' },
     type: 'Offline',
     status: 'Scheduled',
-    riskTag: 'High Risk',   
+    riskTag: 'High Risk',    
     appointmentDate: new Date().toISOString()
   },
   {
@@ -98,7 +102,6 @@ const DoctorDashboard = () => {
             );
 
             const uniqueAppts = Array.from(new Map(todaysList.map(item => [item._id, item])).values());
-
             uniqueAppts.sort((a, b) => a.timeSlot.localeCompare(b.timeSlot));
             
             updateDashboardState(uniqueAppts);
@@ -124,14 +127,13 @@ const DoctorDashboard = () => {
         });
     };
 
-    // --- CLIENT-SIDE DEMO LOADER ---
     const loadDemoData = () => {
         if (isDemoMode) {
             fetchDashboardData();
             return;
         }
 
-        const confirmLoad = window.confirm("Load sample data? This will display temporary demo data without modifying your database.");
+        const confirmLoad = window.confirm("Load sample data? This will display temporary demo data.");
         if (confirmLoad) {
             setLoading(true);
             setTimeout(() => {
@@ -152,7 +154,6 @@ const DoctorDashboard = () => {
         setConsultationAppt(appt);
     };
 
-    // --- Helper for Greeting ---
     const getGreeting = () => {
         const hour = new Date().getHours();
         if (hour < 12) return 'Good Morning ☀️';
@@ -160,137 +161,70 @@ const DoctorDashboard = () => {
         return 'Good Evening 🌙';
     };
 
-    // --- Badge Logic ---
-    const getBadges = () => {
-        const badges = [];
-        if (!analyticsData) return badges;
-        if (analyticsData.totalPatients > 5) badges.push({ icon: <FiAward />, text: "Practice Builder", color: "#f59e0b" });
-        if (analyticsData.totalAppointments > 20) badges.push({ icon: <FiStar />, text: "Top Doc", color: "#8b5cf6" });
-        return badges;
-    };
-
-    // --- Styles ---
-    const demoBtn = {
-        padding: '8px 16px',
-        borderRadius: '8px',
-        border: '1px solid #6366f1',
-        backgroundColor: isDemoMode ? '#e0e7ff' : 'white',
-        color: '#6366f1',
-        cursor: 'pointer',
-        fontSize: '0.9rem',
-        fontWeight: '600',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        transition: 'all 0.2s'
-    };
-
     // --- Analytics UI Components ---
     const AnalyticsPanel = () => {
-        if (!analyticsData) return (
-            <div style={{ padding: '40px', textAlign: 'center', color: '#64748b', backgroundColor: '#f8fafc', borderRadius: '12px' }}>
-                <p>No analytics data available yet.</p>
-                <button 
-                    onClick={loadDemoData}
-                    style={demoBtn}>
-                    <FiDatabase /> Load Demo Analytics
-                </button>
-            </div>
-        );
+        if (!analyticsData) return null;
 
-        // Calculate Percentages
         const total = analyticsData.totalAppointments || 1; 
         const completedPct = Math.round((analyticsData.breakdown.completed / total) * 100);
         const scheduledPct = Math.round((analyticsData.breakdown.scheduled / total) * 100);
         const cancelledPct = Math.round((analyticsData.breakdown.cancelled / total) * 100);
 
         return (
-            <div style={{ animation: 'fadeIn 0.5s' }}>
-                {/* Metric Cards */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '30px' }}>
-                    
-                    <div className="card" style={{ textAlign: 'center', position: 'relative' }}>
-                        <div style={{ position: 'absolute', top: 10, right: 10, color: '#94a3b8' }} title="Number of distinct individuals you have treated"><FiInfo size={14} /></div>
-                        <h3 style={{ fontSize: '2.5rem', color: '#3b82f6', margin: 0 }}>{analyticsData.totalPatients}</h3>
-                        <p style={{ color: '#1e293b', fontWeight: '600', marginBottom: '4px' }}>Total Patient Base</p>
-                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Distinct Individuals Treated</p>
-                    </div>
-
-                    <div className="card" style={{ textAlign: 'center', position: 'relative' }}>
-                        <div style={{ position: 'absolute', top: 10, right: 10, color: '#94a3b8' }} title="Total number of appointments"><FiInfo size={14} /></div>
-                        <h3 style={{ fontSize: '2.5rem', color: '#10b981', margin: 0 }}>{analyticsData.totalAppointments}</h3>
-                        <p style={{ color: '#1e293b', fontWeight: '600', marginBottom: '4px' }}>Total Consultations</p>
-                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>All Completed Appointments</p>
-                    </div>
-
-                    <div className="card" style={{ textAlign: 'center', position: 'relative' }}>
-                        <div style={{ position: 'absolute', top: 10, right: 10, color: '#94a3b8' }} title="Online vs Offline"><FiInfo size={14} /></div>
-                        <h3 style={{ fontSize: '2.5rem', color: '#f59e0b', margin: 0 }}>
-                            {analyticsData.visitTypes.online} <span style={{fontSize: '1rem', color:'#ccc'}}>/</span> {analyticsData.visitTypes.offline}
-                        </h3>
-                        <p style={{ color: '#1e293b', fontWeight: '600', marginBottom: '4px' }}>Consultation Mode</p>
-                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Virtual / In-Clinic Split</p>
-                    </div>
-
-                    <div className="card" style={{ textAlign: 'center', position: 'relative' }}>
-                         <div style={{ position: 'absolute', top: 10, right: 10, color: '#94a3b8' }} title="Satisfaction"><FiInfo size={14} /></div>
-                        <h3 style={{ fontSize: '2.5rem', color: '#8b5cf6', margin: 0 }}>98%</h3>
-                        <p style={{ color: '#1e293b', fontWeight: '600', marginBottom: '4px' }}>Patient Satisfaction</p>
-                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Based on Post-Visit Surveys</p>
-                    </div>
+            <div style={{ animation: 'fadeIn 0.3s ease-in' }}>
+                <div className="analytics-metrics-grid" style={{ marginBottom: '20px' }}>
+                    {[
+                        { val: analyticsData.totalPatients, label: 'Total Patient Base', sub: 'Distinct Individuals Treated', color: '#3b82f6' },
+                        { val: analyticsData.totalAppointments, label: 'Total Consultations', sub: 'All Completed Appointments', color: '#10b981' },
+                        { val: `${analyticsData.visitTypes.online} / ${analyticsData.visitTypes.offline}`, label: 'Consultation Mode', sub: 'Virtual / In-Clinic Split', color: '#f59e0b' },
+                        { val: '98%', label: 'Patient Satisfaction', sub: 'Based on Post-Visit Surveys', color: '#8b5cf6' }
+                    ].map((item, idx) => (
+                        <div key={idx} className="card-shadow" style={{ backgroundColor: 'white', borderRadius: '12px', padding: '16px', textAlign: 'center', position: 'relative' }}>
+                            <div style={{ position: 'absolute', top: 10, right: 10, color: '#94a3b8', cursor: 'pointer' }}><FiInfo size={12} /></div>
+                            <h3 style={{ fontSize: '2rem', fontWeight: '700', color: item.color, margin: '0 0 2px 0', lineHeight: 1 }}>{item.val}</h3>
+                            <p style={{ color: '#1e293b', fontWeight: '600', fontSize: '0.9rem', margin: '0 0 2px 0' }}>{item.label}</p>
+                            <p style={{ fontSize: '0.7rem', color: '#64748b', margin: 0 }}>{item.sub}</p>
+                        </div>
+                    ))}
                 </div>
 
-                {/* Charts Area */}
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
-                    <div className="card" style={{ height: '400px' }}>
-                        <h3 style={{ marginBottom: '20px', color: '#334155' }}>Patient Volume (Last 7 Days)</h3>
-                        <ResponsiveContainer width="100%" height="90%">
+                <div className="analytics-charts-grid">
+                    <div className="card-shadow" style={{ backgroundColor: 'white', borderRadius: '12px', padding: '16px', height: '320px' }}>
+                        <h3 style={{ margin: '0 0 16px 0', color: '#334155', fontWeight: '600', fontSize: '1rem' }}>Patient Volume (Last 7 Days)</h3>
+                        <ResponsiveContainer width="100%" height="88%">
                             <BarChart data={analyticsData.weeklyTrend}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="name" />
-                                <YAxis allowDecimals={false} />
-                                <Tooltip cursor={{fill: '#f1f5f9'}} />
-                                <Bar dataKey="visits" fill="#6366f1" radius={[4,4,0,0]} name="Appointments" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11}} dy={10} />
+                                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11}} />
+                                <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'}} />
+                                <Bar dataKey="visits" fill="#6366f1" radius={[4,4,0,0]} barSize={32} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
 
-                    <div className="card" style={{ height: '400px', display: 'flex', flexDirection: 'column' }}>
-                        <h3 style={{ marginBottom: '20px', color: '#334155' }}>Appointment Status</h3>
-                        
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', flex: 1, justifyContent: 'center' }}>
-                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                                <div style={{ display: 'flex', gap: '12px' }}>
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FiCheckCircle size={20} /></div>
-                                    <div>
-                                        <p style={{ margin: 0, fontWeight: '600', color: '#1e293b' }}>Completed</p>
-                                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>{completedPct}% of total</p>
+                    <div className="card-shadow" style={{ backgroundColor: 'white', borderRadius: '12px', padding: '16px', height: '320px', display: 'flex', flexDirection: 'column' }}>
+                        <h3 style={{ margin: '0 0 16px 0', color: '#334155', fontWeight: '600', fontSize: '1rem' }}>Appointment Status</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, justifyContent: 'center' }}>
+                            {[
+                                { label: 'Completed', pct: completedPct, val: analyticsData.breakdown.completed, icon: <FiCheckCircle size={16} />, bg: '#dcfce7', color: '#16a34a' },
+                                { label: 'Scheduled', pct: scheduledPct, val: analyticsData.breakdown.scheduled, icon: <FiClock size={16} />, bg: '#dbeafe', color: '#2563eb' },
+                                { label: 'Cancelled', pct: cancelledPct, val: analyticsData.breakdown.cancelled, icon: <FiXCircle size={16} />, bg: '#fee2e2', color: '#dc2626' }
+                            ].map((stat, idx) => (
+                                <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', paddingBottom: idx !== 2 ? '12px' : 0, borderBottom: idx !== 2 ? '1px solid #f1f5f9' : 'none' }}>
+                                    <div style={{ display: 'flex', gap: '12px' }}>
+                                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: stat.bg, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            {stat.icon}
+                                        </div>
+                                        <div>
+                                            <p style={{ margin: '0 0 2px 0', fontWeight: '600', color: '#1e293b', fontSize: '0.9rem' }}>{stat.label}</p>
+                                            <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>{stat.pct}% of total</p>
+                                        </div>
+                                    </div>
+                                    <div style={{ textAlign: 'right', alignSelf: 'center' }}>
+                                        <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#1e293b' }}>{stat.val}</span>
                                     </div>
                                 </div>
-                                <div style={{ textAlign: 'right' }}><span style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b' }}>{analyticsData.breakdown.completed}</span></div>
-                            </div>
-
-                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                                <div style={{ display: 'flex', gap: '12px' }}>
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#dbeafe', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FiClock size={20} /></div>
-                                    <div>
-                                        <p style={{ margin: 0, fontWeight: '600', color: '#1e293b' }}>Scheduled</p>
-                                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>{scheduledPct}% of total</p>
-                                    </div>
-                                </div>
-                                <div style={{ textAlign: 'right' }}><span style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b' }}>{analyticsData.breakdown.scheduled}</span></div>
-                            </div>
-
-                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                                <div style={{ display: 'flex', gap: '12px' }}>
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FiXCircle size={20} /></div>
-                                    <div>
-                                        <p style={{ margin: 0, fontWeight: '600', color: '#1e293b' }}>Cancelled</p>
-                                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>{cancelledPct}% of total</p>
-                                    </div>
-                                </div>
-                                <div style={{ textAlign: 'right' }}><span style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b' }}>{analyticsData.breakdown.cancelled}</span></div>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -298,141 +232,198 @@ const DoctorDashboard = () => {
         );
     };
 
-    // --- Main Render ---
+    // --- Styles & Constants ---
+    const headerButtonStyle = (isActive) => ({
+        padding: '6px 12px',
+        borderRadius: '6px',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '0.85rem',
+        fontWeight: '600',
+        backgroundColor: isActive ? 'white' : 'transparent',
+        color: isActive ? (viewMode === 'overview' ? '#3b82f6' : '#8b5cf6') : '#64748b',
+        boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        transition: 'all 0.2s',
+        whiteSpace: 'nowrap'
+    });
+
     return (
-        <div style={{ paddingBottom: '40px' }}>
-            {/* Header with Greeting & Buttons */}
-            <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                <div>
-                    <h1 style={{ fontSize: '1.875rem', fontWeight: '700', color: '#1e293b', marginBottom: '8px' }}>
-                        {getGreeting()} Dr. {user?.name}
+        <div className="main-container">
+            {/* Header Section */}
+            <div className="header-container" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ marginBottom: '10px', width: '100%' }}>
+                    {/* Greeting Row */}
+                    <h1 className="greeting-text" style={{ fontWeight: '800', color: '#1e293b', margin: '0 0 6px 0' }}>
+                        {getGreeting()} <span style={{fontWeight: '800'}}>Dr. {user?.name || 'Admin'}</span>
                     </h1>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <p style={{ color: '#64748b', margin: 0 }}>You have <strong>{todayAppointments.length}</strong> appointments today.</p>
-                        
-                        {/* Demo Mode Badge */}
+                    
+                    {/* Appointments Count */}
+                    <p style={{ color: '#64748b', margin: '0 0 8px 0', fontSize: '0.9rem' }}>You have <strong>{todayAppointments.length}</strong> appointments today.</p>
+                    
+                    {/* Badge Row */}
+                    <div className="badge-row" style={{ display: 'flex', alignItems: 'center', gap: '8px', overflowX: 'auto', whiteSpace: 'nowrap', paddingBottom: '4px' }}>
+                        {/* Demo Badge */}
                         {isDemoMode && (
-                            <span style={{ backgroundColor: '#fef3c7', color: '#d97706', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700', border: '1px solid #fcd34d' }}>
+                            <span style={{ backgroundColor: '#fef3c7', color: '#d97706', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '700', border: '1px solid #fcd34d', display: 'inline-flex', alignItems: 'center' }}>
                                 DEMO MODE
                             </span>
                         )}
 
-                        {/* Badges */}
-                        {getBadges().map((badge, i) => (
-                            <div key={i} style={{ 
-                                display: 'flex', alignItems: 'center', gap: '5px', 
-                                padding: '4px 10px', borderRadius: '20px', 
-                                backgroundColor: badge.color + '20', color: badge.color, 
-                                fontSize: '0.75rem', fontWeight: '700' 
-                            }}>
-                                {badge.icon} {badge.text}
+                        {/* Analytics Badges */}
+                        {analyticsData && analyticsData.totalPatients > 5 && (
+                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '20px', backgroundColor: '#fff7ed', color: '#ea580c', fontSize: '0.7rem', fontWeight: '700' }}>
+                                <FiAward size={12} /> Practice Builder
                             </div>
-                        ))}
+                        )}
+                         {analyticsData && analyticsData.totalAppointments > 20 && (
+                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '20px', backgroundColor: '#f3e8ff', color: '#7e22ce', fontSize: '0.7rem', fontWeight: '700' }}>
+                                <FiStar size={12} /> Top Doc
+                            </div>
+                        )}
                     </div>
                 </div>
                 
-                {/* Actions: Demo & View Switcher */}
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    {/* Load Demo Data Button */}
-                    <button onClick={loadDemoData} style={demoBtn} title="Toggle Demo Data">
-                        <FiDatabase /> {isDemoMode ? 'Demo Active' : 'Load Demo'}
-                    </button>
-
-                    <div style={{ display: 'flex', backgroundColor: '#e2e8f0', padding: '4px', borderRadius: '8px' }}>
-                        <button 
-                            onClick={() => setViewMode('overview')}
-                            style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '600', backgroundColor: viewMode === 'overview' ? 'white' : 'transparent', color: viewMode === 'overview' ? '#3b82f6' : '#64748b', boxShadow: viewMode === 'overview' ? '0 2px 5px rgba(0,0,0,0.05)' : 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <FiGrid /> Overview
+                {/* Top Right Actions */}
+                <div className="header-actions">
+                    {/* View Switcher */}
+                    <div className="view-switcher" style={{ display: 'flex', backgroundColor: '#e2e8f0', padding: '4px', borderRadius: '8px' }}>
+                        <button onClick={() => setViewMode('overview')} className="switcher-btn" style={headerButtonStyle(viewMode === 'overview')}>
+                            <FiGrid size={14} /> Overview
                         </button>
-                        <button 
-                            onClick={() => setViewMode('analytics')}
-                            style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '600', backgroundColor: viewMode === 'analytics' ? 'white' : 'transparent', color: viewMode === 'analytics' ? '#8b5cf6' : '#64748b', boxShadow: viewMode === 'analytics' ? '0 2px 5px rgba(0,0,0,0.05)' : 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <FiPieChart /> Analytics
+                        <button onClick={() => setViewMode('analytics')} className="switcher-btn" style={headerButtonStyle(viewMode === 'analytics')}>
+                            <FiPieChart size={14} /> Analytics
                         </button>
                     </div>
                 </div>
             </div>
 
+            {/* Main Content Area */}
             {viewMode === 'overview' ? (
-                <>
-                    {/* Priority Panel */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+                <div style={{ animation: 'fadeIn 0.3s ease-in' }}>
+                    {/* Priority Cards Row */}
+                    <div className="priority-grid" style={{ marginBottom: '20px' }}>
                         
-                        {/* Urgent Attention */}
-                        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px', padding: '24px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontWeight: '700', color: '#b91c1c' }}>URGENT ATTENTION</span><FiAlertTriangle color="#ef4444" size={24} /></div>
-                            <h3 style={{ fontSize: '2.5rem', margin: '8px 0', color: '#7f1d1d' }}>{priorityStats.highRisk}</h3>
-                            <p style={{ fontSize: '0.85rem', color: '#991b1b', margin: 0, fontWeight: '500' }}>Patients tagged with critical health alerts</p>
+                        {/* Urgent Card */}
+                        <div className="card-shadow" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '12px', padding: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <span style={{ fontWeight: '700', color: '#B91C1C', fontSize: '0.8rem', letterSpacing: '0.5px' }}>URGENT ATTENTION</span>
+                                <FiAlertTriangle color="#EF4444" size={18} />
+                            </div>
+                            <h3 style={{ fontSize: '2.2rem', fontWeight: '700', margin: '0 0 4px 0', color: '#7F1D1D', lineHeight: 1 }}>{priorityStats.highRisk}</h3>
+                            <p style={{ fontSize: '0.8rem', color: '#991B1B', margin: 0, fontWeight: '500' }}>Patients tagged with critical health alerts</p>
                         </div>
 
-                        {/* Up Next */}
-                        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '12px', padding: '24px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontWeight: '700', color: '#b45309' }}>UP NEXT</span><FiClock color="#f59e0b" size={24} /></div>
-                            <h3 style={{ fontSize: '2.5rem', margin: '8px 0', color: '#78350f' }}>{priorityStats.pending}</h3>
-                            <p style={{ fontSize: '0.85rem', color: '#92400e', margin: 0, fontWeight: '500' }}>Scheduled appointments awaiting start</p>
+                        {/* Up Next Card */}
+                        <div className="card-shadow" style={{ backgroundColor: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '12px', padding: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <span style={{ fontWeight: '700', color: '#B45309', fontSize: '0.8rem', letterSpacing: '0.5px' }}>UP NEXT</span>
+                                <FiClock color="#F59E0B" size={18} />
+                            </div>
+                            <h3 style={{ fontSize: '2.2rem', fontWeight: '700', margin: '0 0 4px 0', color: '#78350F', lineHeight: 1 }}>{priorityStats.pending}</h3>
+                            <p style={{ fontSize: '0.8rem', color: '#92400E', margin: 0, fontWeight: '500' }}>Scheduled appointments awaiting start</p>
                         </div>
 
-                        {/* Standard Care */}
-                        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '12px', padding: '24px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontWeight: '700', color: '#047857' }}>STANDARD CARE</span><FiCheckCircle color="#10b981" size={24} /></div>
-                            <h3 style={{ fontSize: '2.5rem', margin: '8px 0', color: '#064e3b' }}>{priorityStats.routine}</h3>
-                            <p style={{ fontSize: '0.85rem', color: '#065f46', margin: 0, fontWeight: '500' }}>Regular follow-ups and general visits</p>
+                        {/* Standard Care Card */}
+                        <div className="card-shadow" style={{ backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '12px', padding: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <span style={{ fontWeight: '700', color: '#047857', fontSize: '0.8rem', letterSpacing: '0.5px' }}>STANDARD CARE</span>
+                                <FiCheckCircle color="#10B981" size={18} />
+                            </div>
+                            <h3 style={{ fontSize: '2.2rem', fontWeight: '700', margin: '0 0 4px 0', color: '#064E3B', lineHeight: 1 }}>{priorityStats.routine}</h3>
+                            <p style={{ fontSize: '0.8rem', color: '#065F46', margin: 0, fontWeight: '500' }}>Regular follow-ups and general visits</p>
                         </div>
                     </div>
 
                     {/* Schedule Table */}
-                    <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-                        <div style={{ padding: '20px', borderBottom: '1px solid #e2e8f0' }}><h3 style={{ margin: 0 }}>Today's Schedule</h3></div>
+                    <div className="card-shadow" style={{ backgroundColor: 'white', borderRadius: '12px', padding: '0', overflow: 'hidden' }}>
+                        <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0' }}>
+                            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b', fontWeight: '700' }}>Today's Schedule</h3>
+                        </div>
                         {todayAppointments.length === 0 ? (
-                            <div style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>
-                                <p style={{fontSize: '1.1rem'}}>No real appointments scheduled today.</p>
-                                <button onClick={loadDemoData} style={{ marginTop: '10px', color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '600', textDecoration: 'underline' }}>
-                                    Load Demo Data to Preview Dashboard
+                            <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>
+                                <p style={{fontSize: '1rem'}}>No real appointments scheduled today.</p>
+                                <button onClick={loadDemoData} style={{ marginTop: '8px', color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '600', textDecoration: 'underline' }}>
+                                    Load Demo Data
                                 </button>
                             </div>
                         ) : (
-                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                                    <tr>
-                                        <th style={{ padding: '16px 24px', textAlign: 'left', color: '#64748b', fontSize: '0.85rem' }}>Time</th>
-                                        <th style={{ padding: '16px 24px', textAlign: 'left', color: '#64748b', fontSize: '0.85rem' }}>Patient Name</th>
-                                        <th style={{ padding: '16px 24px', textAlign: 'left', color: '#64748b', fontSize: '0.85rem' }}>Mode</th>
-                                        <th style={{ padding: '16px 24px', textAlign: 'left', color: '#64748b', fontSize: '0.85rem' }}>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {todayAppointments.map((appt) => (
-                                        <tr key={appt._id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                            <td style={{ padding: '16px 24px', fontWeight: '500', color: '#334155' }}>{appt.timeSlot}</td>
-                                            <td style={{ padding: '16px 24px', fontWeight: '600', color: '#2563eb', cursor: 'pointer' }} onClick={() => handlePatientClick(appt.patientId?._id)}>
-                                                {appt.patientId?.name}
-                                                {appt.riskTag === 'High Risk' && <span style={{ marginLeft: '10px', fontSize: '0.7rem', background: '#fee2e2', color: '#b91c1c', padding: '2px 6px', borderRadius: '4px' }}>HIGH RISK</span>}
-                                            </td>
-                                            <td style={{ padding: '16px 24px' }}>
-                                                {appt.type === 'Online' ? (
-                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#6366f1', background: '#e0e7ff', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', width: 'fit-content' }}>
-                                                        <FiVideo /> Video Call
-                                                    </span>
-                                                ) : (
-                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#059669', background: '#d1fae5', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', width: 'fit-content' }}>
-                                                        <FiMapPin /> In-Clinic
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td style={{ padding: '16px 24px' }}>
-                                                {appt.status !== 'Completed' ? (
-                                                    <button onClick={() => startConsultation(appt)} style={{ padding: '6px 12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                        <FiPlay /> Start
-                                                    </button>
-                                                ) : <span style={{ color: 'green', fontWeight: '600' }}>Completed</span>}
-                                            </td>
+                            <div style={{ overflowX: 'auto' }}>
+                                <table style={{ width: '100%', minWidth: '600px', borderCollapse: 'collapse' }}>
+                                    <thead style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+                                        <tr>
+                                            {['Time', 'Patient Name', 'Mode', 'Action'].map(head => (
+                                                <th key={head} style={{ padding: '12px 16px', textAlign: 'left', color: '#64748B', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase' }}>{head}</th>
+                                            ))}
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {todayAppointments.map((appt) => (
+                                            <tr key={appt._id} style={{ borderBottom: '1px solid #F1F5F9', transition: 'background 0.2s' }}>
+                                                <td style={{ padding: '12px 16px', fontWeight: '500', color: '#334155', fontSize: '0.85rem' }}>{appt.timeSlot}</td>
+                                                <td style={{ padding: '12px 16px' }}>
+                                                    <div style={{display: 'flex', alignItems: 'center'}}>
+                                                        <span 
+                                                            onClick={() => handlePatientClick(appt.patientId?._id)}
+                                                            style={{ fontWeight: '600', color: '#2563EB', cursor: 'pointer', fontSize: '0.9rem' }}
+                                                        >
+                                                            {appt.patientId?.name}
+                                                        </span>
+                                                        {appt.riskTag === 'High Risk' && (
+                                                            <span style={{ marginLeft: '10px', fontSize: '0.65rem', fontWeight: '700', background: '#FEE2E2', color: '#B91C1C', padding: '2px 6px', borderRadius: '4px', border: '1px solid #FECACA' }}>
+                                                                HIGH RISK
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td style={{ padding: '12px 16px' }}>
+                                                    {appt.type === 'Online' ? (
+                                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#4F46E5', background: '#E0E7FF', padding: '4px 10px', borderRadius: '16px', fontSize: '0.8rem', fontWeight: '500' }}>
+                                                            <FiVideo size={12} /> Video Call
+                                                        </span>
+                                                    ) : (
+                                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#059669', background: '#D1FAE5', padding: '4px 10px', borderRadius: '16px', fontSize: '0.8rem', fontWeight: '500' }}>
+                                                            <FiMapPin size={12} /> In-Clinic
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td style={{ padding: '12px 16px' }}>
+                                                    {appt.status !== 'Completed' ? (
+                                                        <button 
+                                                            onClick={() => startConsultation(appt)} 
+                                                            style={{ 
+                                                                padding: '6px 16px', 
+                                                                background: '#2563EB', 
+                                                                color: 'white', 
+                                                                border: 'none', 
+                                                                borderRadius: '6px', 
+                                                                cursor: 'pointer', 
+                                                                display: 'flex', 
+                                                                alignItems: 'center', 
+                                                                gap: '6px', 
+                                                                fontWeight: '600',
+                                                                fontSize: '0.85rem',
+                                                                boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                                                            }}
+                                                        >
+                                                            <FiPlay size={14} /> Start
+                                                        </button>
+                                                    ) : (
+                                                        <span style={{ color: '#16A34A', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                                                            <FiCheckCircle size={14} /> Completed
+                                                        </span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         )}
                     </div>
-                </>
+                </div>
             ) : (
                 <AnalyticsPanel />
             )}
@@ -440,7 +431,56 @@ const DoctorDashboard = () => {
             <PatientSnapshotDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} patientId={selectedPatientId} />
             <ConsultationModal appointment={consultationAppt} onClose={() => setConsultationAppt(null)} onSuccess={fetchDashboardData} />
             
-            <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+                
+                .main-container {
+                    padding: 16px 24px;
+                    background-color: #F3F4F6;
+                    font-family: 'Inter', sans-serif;
+                    min-height: 100vh;
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+
+                .card-shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+                .priority-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+                .analytics-metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+                .analytics-charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+                
+                .greeting-text { font-size: 1.5rem; white-space: nowrap; }
+
+                .badge-row::-webkit-scrollbar { display: none; }
+                .badge-row { -ms-overflow-style: none; scrollbar-width: none; }
+
+                @media (max-width: 1024px) {
+                    .analytics-metrics-grid { grid-template-columns: repeat(2, 1fr); }
+                    .priority-grid { grid-template-columns: repeat(3, 1fr); }
+                }
+
+                @media (max-width: 768px) {
+                    .main-container { 
+                        padding: 16px 12px; 
+                        /* ZOOM EFFECT: Reduces all elements to 80% size on mobile */
+                        zoom: 0.8;
+                    }
+
+                    .header-container { flex-direction: column; }
+                    .header-container > div { width: 100%; justify-content: space-between; }
+ 
+                    .greeting-text { font-size: 1.3rem; }
+
+                    .header-actions { width: 100%; margin-top: 16px; }
+                    .view-switcher { width: 100%; display: flex; }
+                    .switcher-btn { flex: 1; justify-content: center; }
+
+                    .priority-grid { grid-template-columns: 1fr; }
+                    .analytics-metrics-grid { grid-template-columns: 1fr; }
+                    .analytics-charts-grid { grid-template-columns: 1fr; }
+                }
+            `}</style>
         </div>
     );
 };

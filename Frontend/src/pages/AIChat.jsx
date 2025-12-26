@@ -2,24 +2,22 @@ import React, { useState, useEffect, useRef } from 'react';
 import { sendChatMessage, getUserThreads, getThreadMessages, deleteThread } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
-    FiSend, FiMessageSquare, FiPlus, FiTrash2, FiCpu, FiUser, FiZap, FiMenu, FiPaperclip, FiX
+    FiSend, FiMessageSquare, FiPlus, FiTrash2, FiCpu, FiUser, FiMenu, FiPaperclip, FiX, FiActivity, FiSearch, FiShield
 } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-const SUGGESTED_PROMPTS = [
-    "How does sleep affect my health?",
-    "Explain this medical report",
-    "How should I monitor my condition?",
-    "Suggest a diet for high blood pressure",
-    "When should I see a doctor?",
-    "Summarize my symptoms",
-    "What are the symptoms of diabetes?",
-    "How do I know if I’m allergic to this medicine?"
+// Suggestion Cards Data
+const SUGGESTED_CARDS = [
+    { icon: <FiActivity />, text: "How does sleep affect health?", category: "Wellness" },
+    { icon: <FiSearch />, text: "Explain this medical report", category: "Analysis" },
+    { icon: <FiShield />, text: "Suggest a diet for high BP", category: "Diet" },
 ];
 
 const AIChat = () => {
     const { user } = useAuth();
+    
+    // --- State Management ---
     const [threads, setThreads] = useState([]);
     const [activeThreadId, setActiveThreadId] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -74,6 +72,10 @@ const AIChat = () => {
         setMobileMenuOpen(false);
         setSelectedFile(null);
         setPreviewUrl(null);
+        setTimeout(() => {
+            const inputEl = document.querySelector('input[type="text"]');
+            if(inputEl) inputEl.focus();
+        }, 100);
     };
 
     const handleDeleteThread = async (e, threadId) => {
@@ -126,6 +128,7 @@ const AIChat = () => {
         });
     };
 
+    // --- Message Sending ---
     const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!inputMessage.trim() && !selectedFile) return;
@@ -158,7 +161,6 @@ const AIChat = () => {
 
             const res = await sendChatMessage(currentMsg, activeThreadId, base64File, mimeType);
 
-            // Update messages with real response
             setMessages([...tempMessages, { role: 'assistant', content: res.reply }]);
 
             if (!activeThreadId && res.threadId) {
@@ -180,178 +182,338 @@ const AIChat = () => {
     };
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     };
 
-    // --- Styles ---
+    const getGreetingTitle = () => {
+        const role = user?.role?.toLowerCase(); 
+        if (role === 'patient') return 'Patient';
+        return 'Doctor'; 
+    };
+
+    // --- Theme & Styles ---
+    const theme = {
+        primary: '#2563eb', 
+        bg: '#ffffff', 
+        sidebarBg: '#f8fafc', 
+        textMain: '#0f172a', 
+        textSec: '#64748b', 
+        border: '#e2e8f0', 
+        userBubble: '#eff6ff', 
+        aiBubble: '#ffffff',
+    };
+
     const styles = {
         container: {
             display: 'flex',
-            height: 'calc(100vh - 150px)',
-            backgroundColor: 'white',
-            borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            overflow: 'hidden',
-            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
-            position: 'relative'
+            width: '100%', 
+            height: 'calc(100vh - 110px)', 
+            backgroundColor: theme.bg,
+            fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            overflow: 'hidden', 
+            position: 'relative',
+            borderRadius: '16px', 
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', 
+            border: `1px solid ${theme.border}`,
         },
         sidebar: {
-            width: '280px',
-            backgroundColor: '#f8fafc',
-            borderRight: '1px solid #e2e8f0',
+            width: '260px', 
+            backgroundColor: theme.sidebarBg,
+            borderRight: `1px solid ${theme.border}`,
             display: 'flex',
             flexDirection: 'column',
-            transition: 'transform 0.3s ease',
-            zIndex: 10
+            transition: 'transform 0.3s ease-in-out',
+            zIndex: 30, 
+            flexShrink: 0,
+            height: '100%'
         },
+        sidebarHeader: { 
+            padding: '16px', 
+            flexShrink: 0 
+        },
+        newChatBtn: {
+            width: '100%', 
+            padding: '10px', 
+            backgroundColor: theme.primary, 
+            border: 'none',
+            borderRadius: '8px', 
+            color: 'white', 
+            fontWeight: '600', 
+            fontSize: '0.85rem',
+            cursor: 'pointer',
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            gap: '8px', 
+            boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)'
+        },
+        threadList: { 
+            flex: 1, 
+            overflowY: 'auto', 
+            padding: '0 10px 10px 10px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '2px' 
+        },
+        historyTitle: {
+            fontSize: '0.7rem', 
+            fontWeight: '700', 
+            color: '#94a3b8', 
+            textTransform: 'uppercase', 
+            letterSpacing: '0.05em', 
+            padding: '0 8px',
+            marginBottom: '8px',
+            marginTop: '8px'
+        },
+        threadItem: (isActive) => ({
+            padding: '8px 10px', 
+            borderRadius: '6px', 
+            cursor: 'pointer',
+            backgroundColor: isActive ? '#e2e8f0' : 'transparent', 
+            color: isActive ? theme.textMain : theme.textSec,
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            fontSize: '0.85rem',
+            fontWeight: isActive ? '600' : '400',
+        }),
         main: {
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            backgroundColor: 'white',
-            position: 'relative'
+            backgroundColor: theme.bg,
+            position: 'relative',
+            height: '100%', 
+            overflow: 'hidden' 
         },
-        // Sidebar Elements
-        sidebarHeader: { padding: '20px', borderBottom: '1px solid #e2e8f0' },
-        newChatBtn: {
-            width: '100%', padding: '12px', backgroundColor: 'white', border: '1px solid #e2e8f0',
-            borderRadius: '8px', color: '#1e293b', fontWeight: '600', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.2s',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-        },
-        threadList: { flex: 1, overflowY: 'auto', padding: '10px' },
-        threadItem: (isActive) => ({
-            padding: '12px', borderRadius: '8px', marginBottom: '4px', cursor: 'pointer',
-            backgroundColor: isActive ? '#eff6ff' : 'transparent',
-            color: isActive ? '#2563eb' : '#475569',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            fontSize: '0.9rem', transition: 'background 0.2s'
-        }),
-
-        // Chat Area Elements
         chatHeader: {
-            padding: '16px 24px', borderBottom: '1px solid #f1f5f9',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+            padding: '0 20px', 
+            borderBottom: `1px solid ${theme.border}`,
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+            flexShrink: 0, 
+            zIndex: 10,
+            height: '50px', 
         },
         chatWindow: {
-            flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px'
+            flex: 1, 
+            overflowY: 'auto', 
+            padding: '16px 20px', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '16px', 
+            maxWidth: '1000px', 
+            width: '100%',
+            margin: '0 auto',
+            scrollBehavior: 'smooth',
         },
         messageRow: (role) => ({
-            display: 'flex', gap: '15px',
+            display: 'flex', 
+            gap: '10px',
             justifyContent: role === 'user' ? 'flex-end' : 'flex-start',
-            maxWidth: '800px', margin: '0 auto', width: '100%'
+            width: '100%',
+            animation: 'fadeIn 0.3s ease-in-out'
         }),
         avatar: (role) => ({
-            width: '36px', height: '36px', borderRadius: '10px',
+            width: '28px', height: '28px', borderRadius: '6px',
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            backgroundColor: role === 'user' ? '#3b82f6' : '#10b981',
-            color: 'white'
+            backgroundColor: role === 'user' ? theme.primary : '#10b981', 
+            color: 'white', 
+            fontSize: '12px',
         }),
         bubble: (role) => ({
-            padding: '16px 20px', borderRadius: '12px',
-            backgroundColor: role === 'user' ? '#eff6ff' : '#f8fafc',
-            color: '#1e293b', lineHeight: '1.6', fontSize: '0.95rem',
+            padding: '10px 14px', 
+            borderRadius: '12px',
+            backgroundColor: role === 'user' ? theme.userBubble : '#f1f5f9', 
+            color: theme.textMain, 
+            lineHeight: '1.45', 
+            fontSize: '0.9rem', 
             borderTopLeftRadius: role === 'assistant' ? '2px' : '12px',
             borderTopRightRadius: role === 'user' ? '2px' : '12px',
-            maxWidth: '80%',
-            position: 'relative'
+            maxWidth: '85%',
         }),
-
-        // Suggestions
-        promptsContainer: {
-            maxWidth: '800px', margin: '0 auto 10px auto', width: '100%',
-            display: 'flex', gap: '10px', overflowX: 'auto', padding: '0 24px',
-            scrollbarWidth: 'none'
+        emptyState: {
+            height: '100%', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            color: theme.textSec,
+            padding: '10px' 
         },
-        promptChip: {
-            padding: '8px 16px', borderRadius: '20px', backgroundColor: '#f1f5f9',
-            border: '1px solid #e2e8f0', color: '#475569', fontSize: '0.85rem',
-            whiteSpace: 'nowrap', cursor: 'pointer', transition: 'all 0.2s'
+        suggestionGrid: {
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: '10px',
+            width: '100%',
+            maxWidth: '700px',
+            marginTop: '16px',
+            marginBottom: '10px'
         },
-
-        // Input Area
+        suggestionCard: {
+            padding: '10px 12px',
+            backgroundColor: '#ffffff',
+            border: `1px solid ${theme.border}`,
+            borderRadius: '10px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+            textAlign: 'left',
+            color: theme.textMain,
+            boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+        },
         inputContainer: {
-            padding: '24px', borderTop: '1px solid #f1f5f9',
-            display: 'flex', flexDirection: 'column', alignItems: 'center'
+            padding: '10px 16px', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center',
+            backgroundColor: theme.bg,
+            flexShrink: 0, 
+            zIndex: 10,
+            borderTop: `1px solid ${theme.border}`
         },
         inputWrapper: {
-            width: '100%', maxWidth: '800px', position: 'relative',
-            display: 'flex', alignItems: 'center', gap: '10px',
-            backgroundColor: 'white', borderRadius: '12px',
-            border: '1px solid #cbd5e1', padding: '8px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+            width: '100%', 
+            maxWidth: '900px', 
+            position: 'relative',
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            backgroundColor: 'white', 
+            borderRadius: '10px', 
+            border: `1px solid ${theme.border}`, 
+            padding: '4px 8px 4px 10px',
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)'
         },
         inputField: {
-            flex: 1, padding: '12px', border: 'none', outline: 'none',
-            fontSize: '1rem', color: '#1e293b'
+            flex: 1, 
+            padding: '8px 0', 
+            border: 'none', 
+            outline: 'none',
+            fontSize: '0.9rem', 
+            color: theme.textMain,
+            margin: 0,
+            background: 'transparent',
+            minWidth: 0 
         },
         sendBtn: {
-            padding: '10px 20px', backgroundColor: '#3b82f6', color: 'white',
-            border: 'none', borderRadius: '8px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600',
-            opacity: (!inputMessage.trim() && !selectedFile) || loading ? 0.6 : 1
+            width: '32px', 
+            height: '32px',
+            backgroundColor: (!inputMessage.trim() && !selectedFile) || loading ? '#f1f5f9' : theme.primary,
+            color: (!inputMessage.trim() && !selectedFile) || loading ? '#94a3b8' : 'white',
+            border: 'none', 
+            borderRadius: '8px', 
+            cursor: (!inputMessage.trim() && !selectedFile) || loading ? 'default' : 'pointer',
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            transition: 'all 0.2s ease',
+            flexShrink: 0, 
         },
         iconBtn: {
-            padding: '10px', color: '#64748b', background: 'none', border: 'none',
-            cursor: 'pointer', borderRadius: '50%', display: 'flex', alignItems: 'center',
-            transition: 'background 0.2s'
+            padding: '6px', 
+            color: theme.textSec, 
+            background: '#f8fafc', 
+            border: 'none',
+            cursor: 'pointer', 
+            borderRadius: '6px', 
+            display: 'flex', 
+            alignItems: 'center',
+            flexShrink: 0
         },
-
         filePreviewBadge: {
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '6px 12px', backgroundColor: '#e0f2fe', color: '#0369a1',
-            borderRadius: '8px', fontSize: '0.85rem', marginRight: '5px'
+            display: 'flex', alignItems: 'center', gap: '6px',
+            padding: '2px 8px', backgroundColor: '#e0f2fe', color: '#0369a1',
+            borderRadius: '4px', fontSize: '0.7rem', marginRight: '4px',
+            border: '1px solid #bae6fd'
         },
-
-        emptyState: {
-            height: '100%', display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center', color: '#64748b'
-        }
     };
 
     return (
-        <div style={styles.container}>
-            {/* Mobile Menu Toggle */}
-            <div className="mobile-only" style={{ position: 'absolute', top: 15, left: 15, zIndex: 100 }}>
-                <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ background: 'white', border: '1px solid #ccc', padding: '8px', borderRadius: '4px' }}>
-                    <FiMenu />
-                </button>
-            </div>
+        <div className="app-container" style={styles.container}>
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                * { box-sizing: border-box; }
+                ::-webkit-scrollbar { width: 5px; }
+                ::-webkit-scrollbar-track { background: transparent; }
+                ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+                
+                .suggestion-card:hover { 
+                    transform: translateY(-2px); 
+                    box-shadow: 0 4px 6px -2px rgba(0,0,0,0.1) !important; 
+                    border-color: #93c5fd !important;
+                }
+
+                .mobile-toggle-btn {
+                    display: none;
+                    background: none;
+                    border: none;
+                    padding: 8px;
+                    margin-right: 8px;
+                    cursor: pointer;
+                    color: #334155;
+                }
+
+                @media (max-width: 768px) {
+                    .app-container { flexDirection: column; height: 100% !important; border: none !important; border-radius: 0 !important; }
+                    .sidebar-closed { position: absolute; left: -100%; height: 100%; width: 250px !important; }
+                    .sidebar-open { position: absolute; left: 0; height: 100%; width: 250px !important; box-shadow: 10px 0 100px rgba(0,0,0,0.3); }
+                    .mobile-toggle-btn { display: flex !important; }
+                    .chat-window { padding-bottom: 80px !important; }
+                    .suggestion-grid { grid-template-columns: 1fr 1fr !important; }
+                }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(5px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `}</style>
 
             {/* Sidebar */}
             <div style={styles.sidebar} className={mobileMenuOpen ? 'sidebar-open' : 'sidebar-closed'}>
                 <div style={styles.sidebarHeader}>
-                    <button onClick={startNewChat} style={styles.newChatBtn}>
-                        <FiPlus size={18} /> New Chat
+                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
+                         <h3 style={{margin:0, fontSize:'0.9rem', color: theme.textMain}}>History</h3>
+                         <button onClick={() => setMobileMenuOpen(false)} style={{background:'none', border:'none', cursor:'pointer'}} className="mobile-toggle-btn">
+                             <FiX size={18} />
+                         </button>
+                    </div>
+                    <button onClick={startNewChat} className="new-chat-btn" style={styles.newChatBtn}>
+                        <FiPlus size={16} /> New Chat
                     </button>
                 </div>
                 <div style={styles.threadList}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '0.05em' }}>
-                        History
-                    </div>
+                    <div style={styles.historyTitle}>Recent</div>
                     {historyLoading ? (
-                        <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>Loading...</div>
+                        <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8', fontSize: '0.8rem' }}>Loading...</div>
                     ) : threads.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '20px', fontSize: '0.85rem', color: '#cbd5e1' }}>No history yet</div>
+                        <div style={{ textAlign: 'center', padding: '20px', fontSize: '0.8rem', color: '#cbd5e1', fontStyle: 'italic' }}>
+                            No conversations
+                        </div>
                     ) : (
                         threads.map(thread => (
                             <div
                                 key={thread._id}
                                 onClick={() => openThread(thread._id)}
+                                className="thread-item"
                                 style={styles.threadItem(activeThreadId === thread._id)}
                             >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
-                                    <FiMessageSquare size={16} />
-                                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '160px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                                    <FiMessageSquare size={12} style={{ flexShrink: 0 }} />
+                                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px' }}>
                                         {thread.title}
                                     </span>
                                 </div>
                                 <button
                                     onClick={(e) => handleDeleteThread(e, thread._id)}
                                     className="delete-btn"
-                                    style={{ background: 'none', border: 'none', color: 'inherit', opacity: 0.6, cursor: 'pointer' }}
+                                    style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0 }}
                                 >
-                                    <FiTrash2 />
+                                    <FiTrash2 size={12} />
                                 </button>
                             </div>
                         ))
@@ -360,40 +522,66 @@ const AIChat = () => {
             </div>
 
             {/* Main Chat Area */}
-            <div style={styles.main}>
-                <div style={styles.chatHeader}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: '#ecfdf5', color: '#10b981' }}>
-                            <FiCpu size={20} />
+            <div style={styles.main} onClick={() => mobileMenuOpen && setMobileMenuOpen(false)}>
+                {/* Header */}
+                <div style={styles.chatHeader} className="chat-header">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button 
+                            className="mobile-toggle-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setMobileMenuOpen(!mobileMenuOpen);
+                            }}
+                        >
+                            <FiMenu size={20} />
+                        </button>
+
+                        <div style={{ width: '28px', height: '28px', borderRadius: '6px', backgroundColor: '#e0f2fe', color: theme.primary, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <FiActivity size={16} />
                         </div>
                         <div>
-                            <h3 style={{ margin: 0, fontSize: '1rem', color: '#1e293b' }}>AlgoMed Assistant</h3>
-                            <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Powered by Gemini AI</span>
+                            <h3 style={{ margin: 0, fontSize: '0.9rem', color: theme.textMain, fontWeight: '700' }}>AlgoMed AI</h3>
                         </div>
                     </div>
                 </div>
 
-                <div style={styles.chatWindow}>
+                {/* Chat Window */}
+                <div style={styles.chatWindow} className="chat-window">
                     {messages.length === 0 ? (
-                        <div style={styles.emptyState}>
-                            <div style={{ width: '80px', height: '80px', backgroundColor: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-                                <FiZap size={40} color="#64748b" />
-                            </div>
-                            <h2 style={{ margin: '0 0 10px 0', color: '#1e293b' }}>How can I help you today?</h2>
-                            <p style={{ maxWidth: '400px', textAlign: 'center', color: '#64748b', lineHeight: '1.5' }}>
-                                Upload a medical report for analysis or ask general health questions.
+                        <div style={styles.emptyState} className="empty-state">
+                            <h2 className="greeting-title" style={{ margin: '0 0 8px 0', color: theme.textMain, fontSize: '1.5rem', fontWeight: '800' }}>
+                                Hello, {getGreetingTitle()}
+                            </h2>
+
+                            <p className="greeting-text" style={{ maxWidth: '450px', textAlign: 'center', color: theme.textSec, lineHeight: '1.4', fontSize: '0.9rem', marginBottom: '20px' }}>
+                                I can analyze reports or check symptoms. How can I help?
                             </p>
+
+                            <div className="suggestion-grid" style={styles.suggestionGrid}>
+                                {SUGGESTED_CARDS.map((item, i) => (
+                                    <div 
+                                        key={i} 
+                                        className="suggestion-card" 
+                                        style={styles.suggestionCard}
+                                        onClick={() => handlePromptClick(item.text)}
+                                    >
+                                        <div style={{ color: theme.primary, fontSize: '1rem', marginBottom: '2px' }}>{item.icon}</div>
+                                        <div style={{ fontSize: '0.85rem', fontWeight: '600' }}>{item.text}</div>
+                                        <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{item.category}</div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     ) : (
                         messages.map((msg, index) => (
                             <div key={index} style={styles.messageRow(msg.role)}>
                                 {msg.role === 'assistant' && (
-                                    <div style={styles.avatar(msg.role)}><FiCpu /></div>
+                                    <div style={styles.avatar(msg.role)}><FiCpu size={14}/></div>
                                 )}
                                 <div style={styles.bubble(msg.role)}>
                                     {msg.image && (
-                                        <div style={{ marginBottom: '10px' }}>
-                                            <img src={msg.image} alt="Upload" style={{ maxWidth: '200px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                                        <div style={{ marginBottom: '8px' }}>
+                                            <img src={msg.image} alt="Upload" style={{ maxWidth: '100%', borderRadius: '8px', border: `1px solid ${theme.border}` }} />
                                         </div>
                                     )}
                                     <div className="markdown-content">
@@ -403,37 +591,26 @@ const AIChat = () => {
                                     </div>
                                 </div>
                                 {msg.role === 'user' && (
-                                    <div style={styles.avatar(msg.role)}><FiUser /></div>
+                                    <div style={styles.avatar(msg.role)}><FiUser size={14} /></div>
                                 )}
                             </div>
                         ))
                     )}
                     {loading && (
                         <div style={styles.messageRow('assistant')}>
-                            <div style={styles.avatar('assistant')}><FiCpu /></div>
-                            <div style={{ ...styles.bubble('assistant'), fontStyle: 'italic', color: '#94a3b8' }}>
-                                Thinking...
+                            <div style={styles.avatar('assistant')}><FiCpu size={14}/></div>
+                            <div style={{ ...styles.bubble('assistant'), fontStyle: 'italic', color: theme.textSec, padding: '8px 12px' }}>
+                                <span style={{ display: 'inline-block', animation: 'pulse 1.5s infinite', fontSize: '0.85rem' }}>Thinking...</span>
                             </div>
                         </div>
                     )}
                     <div ref={messagesEndRef} />
                 </div>
 
-                {messages.length === 0 && (
-                    <div style={styles.promptsContainer}>
-                        {SUGGESTED_PROMPTS.map((prompt, i) => (
-                            <button key={i} onClick={() => handlePromptClick(prompt)} style={styles.promptChip}>
-                                {prompt}
-                            </button>
-                        ))}
-                    </div>
-                )}
-
-                <div style={styles.inputContainer}>
+                <div style={styles.inputContainer} className="input-container">
                     <form onSubmit={handleSendMessage} style={styles.inputWrapper}>
-                        {/* File Upload Button */}
-                        <button type="button" onClick={() => fileInputRef.current.click()} style={styles.iconBtn} title="Upload Medical Report">
-                            <FiPaperclip size={20} />
+                        <button type="button" onClick={() => fileInputRef.current.click()} className="icon-btn" style={styles.iconBtn} title="Upload Report">
+                            <FiPaperclip size={16} />
                         </button>
                         <input
                             type="file"
@@ -443,42 +620,33 @@ const AIChat = () => {
                             accept="image/*"
                         />
 
-                        {/* File Preview inside Input */}
                         {selectedFile && (
                             <div style={styles.filePreviewBadge}>
-                                <span style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <span style={{ maxWidth: '50px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                     {selectedFile.name}
                                 </span>
                                 <button type="button" onClick={clearFile} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#0369a1', display: 'flex' }}>
-                                    <FiX />
+                                    <FiX size={12} />
                                 </button>
                             </div>
                         )}
 
+                        {/* Text Input */}
                         <input
                             type="text"
-                            placeholder={selectedFile ? "Ask a question about this file..." : "Type your health question..."}
+                            placeholder={selectedFile ? "Ask about this file..." : "Type your question..."}
                             value={inputMessage}
                             onChange={(e) => setInputMessage(e.target.value)}
                             style={styles.inputField}
                         />
+                        
+                        {/* Send Button */}
                         <button type="submit" style={styles.sendBtn} disabled={(!inputMessage.trim() && !selectedFile) || loading}>
-                            <FiSend /> Send
+                            <FiSend size={14} />
                         </button>
                     </form>
                 </div>
             </div>
-
-            <style>{`
-                @media (max-width: 768px) {
-                    .sidebar-closed { position: absolute; left: -280px; height: 100%; }
-                    .sidebar-open { position: absolute; left: 0; height: 100%; box-shadow: 5px 0 15px rgba(0,0,0,0.1); }
-                }
-                @media (min-width: 769px) {
-                    .mobile-only { display: none; }
-                }
-                .delete-btn:hover { color: #ef4444 !important; opacity: 1 !important; }
-            `}</style>
         </div>
     );
 };

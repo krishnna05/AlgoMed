@@ -1,45 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { getPatientProfile, updatePatientProfile } from '../services/api';
 import { 
-  FiSave, FiPrinter, FiActivity, FiHeart, FiAlertCircle, 
-  FiUser, FiCheckCircle, FiTrendingUp, FiInfo, FiTrash2, FiPlus 
+  FiSave, FiPrinter, FiActivity, FiAlertCircle, 
+  FiUser, FiCheckCircle, FiInfo, FiTrash2, FiPlus, FiCheck 
 } from 'react-icons/fi';
-
-// --- DEMO DATA CONSTANT ---
-const DEMO_DATA = {
-  dateOfBirth: '1985-06-15',
-  bloodGroup: 'O+',
-  height: '178',
-  weight: '75',
-  medicalHistory: [
-    { condition: 'Hypertension', diagnosedDate: '2019-04-10', status: 'Managed' },
-    { condition: 'Seasonal Allergies', diagnosedDate: '2010-03-01', status: 'Active' }
-  ],
-  allergies: [
-    { allergen: 'Penicillin', reaction: 'Skin Rash', severity: 'Moderate' },
-    { allergen: 'Peanuts', reaction: 'Anaphylaxis', severity: 'Severe' }
-  ],
-  currentMedications: [
-    { name: 'Lisinopril', dosage: '10mg', frequency: 'Once daily' },
-    { name: 'Cetirizine', dosage: '10mg', frequency: 'As needed' }
-  ],
-  lifestyle: {
-    smoking: 'No',
-    alcohol: 'Occasionally',
-    activityLevel: 'Moderate'
-  },
-  emergencyContact: {
-    name: 'Aditi Sehrawat',
-    phone: '9678389678',
-    relation: 'Spouse'
-  }
-};
 
 const PatientProfile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [activeTab, setActiveTab] = useState('clinical'); 
 
   const [formData, setFormData] = useState({
     dateOfBirth: '', bloodGroup: '', height: '', weight: '',
@@ -49,34 +18,34 @@ const PatientProfile = () => {
   });
 
   useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        if (getPatientProfile) {
+            const res = await getPatientProfile();
+            if (res.data) {
+                setFormData(prev => ({
+                    ...prev,
+                    ...res.data,
+                    dateOfBirth: res.data.dateOfBirth ? res.data.dateOfBirth.split('T')[0] : '',
+                    lifestyle: { ...prev.lifestyle, ...(res.data.lifestyle || {}) },
+                    emergencyContact: { ...prev.emergencyContact, ...(res.data.emergencyContact || {}) },
+                    medicalHistory: res.data.medicalHistory || [],
+                    allergies: res.data.allergies || [],
+                    currentMedications: res.data.currentMedications || []
+                }));
+            }
+        }
+      } catch (error) {
+        console.error("Error fetching patient profile", error);
+        setMessage({ type: 'error', text: 'Could not load profile data.' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchProfile();
   }, []);
 
-  const fetchProfile = async () => {
-    try {
-      const res = await getPatientProfile();
-      if (res.data) {
-        setFormData(prev => ({
-          ...prev,
-          ...res.data,
-          dateOfBirth: res.data.dateOfBirth ? res.data.dateOfBirth.split('T')[0] : '',
-          lifestyle: { ...prev.lifestyle, ...(res.data.lifestyle || {}) },
-          emergencyContact: { ...prev.emergencyContact, ...(res.data.emergencyContact || {}) },
-          medicalHistory: res.data.medicalHistory || [],
-          allergies: res.data.allergies || [],
-          currentMedications: res.data.currentMedications || []
-        }));
-      }
-    } catch (error) {
-      console.error("Error fetching patient profile", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // --- DYNAMIC CALCULATIONS ---
-
-  // 1. BMI Calculator
   const bmiData = useMemo(() => {
     if (formData.height && formData.weight) {
         const h = formData.height / 100; 
@@ -95,7 +64,6 @@ const PatientProfile = () => {
     return null;
   }, [formData.height, formData.weight]);
 
-  // 2. Profile Strength
   const profileStrength = useMemo(() => {
     let score = 0;
     if (formData.dateOfBirth) score += 10;
@@ -109,13 +77,6 @@ const PatientProfile = () => {
   }, [formData]);
 
   // --- HANDLERS ---
-
-  const fillDemoData = () => {
-    if (window.confirm("This will overwrite your current form fields with demo data. Continue?")) {
-      setFormData(DEMO_DATA);
-      setMessage({ type: 'success', text: 'Demo data loaded! Review and click "Save".' });
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -149,7 +110,7 @@ const PatientProfile = () => {
     setSaving(true);
     setMessage({ type: '', text: '' });
     try {
-      await updatePatientProfile(formData);
+      if(updatePatientProfile) await updatePatientProfile(formData);
       setMessage({ type: 'success', text: 'Medical profile updated successfully!' });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
@@ -163,129 +124,109 @@ const PatientProfile = () => {
     window.print();
   };
 
-  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading Profile...</div>;
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Loading Profile...</div>;
 
   // --- STYLES ---
   const styles = {
-    container: { maxWidth: '1200px', margin: '0 auto', paddingBottom: '60px' },
-    
-    // Header
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '30px', flexWrap: 'wrap', gap: '20px' },
-    titleGroup: { flex: 1 },
-    pageTitle: { fontSize: '2rem', fontWeight: '800', color: '#1e293b', margin: 0, letterSpacing: '-1px' },
-    subTitle: { color: '#64748b', marginTop: '8px' },
-    
-    // Grid Layout
-    mainGrid: { display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '30px', alignItems: 'start' },
+    container: { maxWidth: '1000px', margin: '0 auto', paddingBottom: '40px', fontSize: '14px' },
     
     // Cards
-    card: { backgroundColor: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', marginBottom: '24px' },
+    card: { backgroundColor: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 2px 4px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', marginBottom: '20px' },
     
-    // Digital ID Card (Visual)
+    // Digital ID Card
     idCard: {
         background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-        borderRadius: '20px', padding: '24px', color: 'white',
-        boxShadow: '0 10px 25px -5px rgba(30, 41, 59, 0.5)',
-        position: 'relative', overflow: 'hidden', marginBottom: '30px'
+        borderRadius: '16px', padding: '20px', color: 'white',
+        boxShadow: '0 8px 20px -5px rgba(30, 41, 59, 0.4)',
+        position: 'relative', overflow: 'hidden', marginBottom: '20px'
     },
-    idHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-    idLabel: { fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2px', opacity: 0.7 },
-    idGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px' },
-    idItem: { background: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '10px', backdropFilter: 'blur(5px)' },
-    idValue: { fontSize: '1.1rem', fontWeight: '700', marginBottom: '2px' },
-    idKey: { fontSize: '0.75rem', opacity: 0.8 },
-
+    
     // Inputs
-    label: { display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#475569', marginBottom: '6px', textTransform: 'uppercase' },
-    input: { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.95rem', transition: 'all 0.2s' },
-    select: { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.95rem', backgroundColor: 'white' },
+    label: { display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#475569', marginBottom: '4px', textTransform: 'uppercase' },
+    input: { width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem', transition: 'all 0.2s', boxSizing: 'border-box' },
+    select: { width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem', backgroundColor: 'white', boxSizing: 'border-box' },
     
     // Section Headers
-    sectionHeader: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' },
-    sectionIcon: { color: '#3b82f6', fontSize: '1.2rem' },
-    sectionTitle: { fontSize: '1.1rem', fontWeight: '700', color: '#1e293b', margin: 0 },
+    sectionHeader: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' },
+    sectionIcon: { color: '#3b82f6', fontSize: '1rem' },
+    sectionTitle: { fontSize: '1rem', fontWeight: '700', color: '#1e293b', margin: 0 },
 
     // Buttons
-    btnPrimary: { padding: '12px 24px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)' },
-    btnSecondary: { padding: '10px 20px', backgroundColor: 'white', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' },
-    btnSmall: { padding: '6px 12px', fontSize: '0.8rem', backgroundColor: '#f1f5f9', border: 'none', borderRadius: '6px', cursor: 'pointer', color: '#475569', fontWeight: '600' },
-    btnIcon: { background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', transition: 'color 0.2s' },
+    btnPrimary: { padding: '8px 16px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)' },
+    btnSecondary: { padding: '8px 16px', backgroundColor: 'white', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' },
+    btnSmall: { padding: '4px 10px', fontSize: '0.75rem', backgroundColor: '#f1f5f9', border: 'none', borderRadius: '4px', cursor: 'pointer', color: '#475569', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' },
+    btnIcon: { background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', transition: 'color 0.2s', padding: '4px', display: 'flex', alignItems: 'center' },
 
-    // Interactive List Items
-    listItem: { display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px', marginBottom: '10px', border: '1px solid #f1f5f9' },
+    // List Item Container
+    listItem: { backgroundColor: '#f8fafc', borderRadius: '6px', marginBottom: '8px', border: '1px solid #f1f5f9', padding: '10px' },
     
     // BMI Widget
-    bmiWidget: { textAlign: 'center', padding: '20px', background: bmiData ? bmiData.color + '10' : '#f8fafc', borderRadius: '12px', border: `1px solid ${bmiData ? bmiData.color : '#e2e8f0'}` },
-    bmiValue: { fontSize: '2.5rem', fontWeight: '800', color: bmiData ? bmiData.color : '#cbd5e1', lineHeight: 1, marginBottom: '5px' },
-    bmiStatus: { fontSize: '1rem', fontWeight: '600', color: bmiData ? bmiData.color : '#94a3b8', textTransform: 'uppercase' },
+    bmiWidget: { textAlign: 'center', padding: '16px', background: bmiData ? bmiData.color + '10' : '#f8fafc', borderRadius: '10px', border: `1px solid ${bmiData ? bmiData.color : '#e2e8f0'}` },
+    bmiValue: { fontSize: '2rem', fontWeight: '800', color: bmiData ? bmiData.color : '#cbd5e1', lineHeight: 1, marginBottom: '4px' },
+    bmiStatus: { fontSize: '0.85rem', fontWeight: '600', color: bmiData ? bmiData.color : '#94a3b8', textTransform: 'uppercase' },
 
     // Progress Bar
-    progressBg: { height: '8px', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden', marginTop: '8px' },
+    progressBg: { height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden', marginTop: '8px' },
     progressFill: { height: '100%', backgroundColor: '#22c55e', width: `${profileStrength}%`, transition: 'width 0.5s ease' }
   };
 
   return (
-    <div style={styles.container}>
+    <div className="mobile-scaler" style={styles.container}>
       
       {/* --- HEADER SECTION --- */}
-      <div style={styles.header}>
-        <div style={styles.titleGroup}>
-            <h1 style={styles.pageTitle}>My Health Profile</h1>
-            <p style={styles.subTitle}>Manage your medical history and vital stats securely.</p>
+      <div className="header-flex">
+        <div style={{ flex: 1 }}>
+            <h1 className="page-title" style={{ fontSize: '1.75rem', fontWeight: '800', color: '#1e293b', margin: '0', letterSpacing: '-1px', lineHeight: '1.2' }}>My Health Profile</h1>
+            <p className="sub-title">Manage your medical history and vital stats securely.</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-            <button type="button" onClick={fillDemoData} style={styles.btnSecondary}>
-                <FiActivity /> Load Demo Data
-            </button>
+        <div className="header-actions">
             <button type="button" onClick={handlePrint} style={styles.btnSecondary}>
-                <FiPrinter /> Print Card
+                <FiPrinter /> Print
             </button>
             <button type="submit" form="profile-form" style={styles.btnPrimary} disabled={saving}>
-                {saving ? 'Saving...' : <><FiSave /> Save Changes</>}
+                {saving ? 'Saving...' : <><FiSave /> Save</>}
             </button>
         </div>
       </div>
 
       {message.text && (
-          <div style={{ padding: '16px', borderRadius: '8px', marginBottom: '24px', backgroundColor: message.type === 'success' ? '#dcfce7' : '#fee2e2', color: message.type === 'success' ? '#166534' : '#991b1b', border: '1px solid currentColor', display: 'flex', alignItems: 'center', gap: '10px' }}>
-             {message.type === 'success' ? <FiCheckCircle /> : <FiAlertCircle />} {message.text}
+          <div style={{ padding: '12px', borderRadius: '6px', marginBottom: '20px', fontSize: '0.85rem', backgroundColor: message.type === 'success' ? '#dcfce7' : '#fee2e2', color: message.type === 'success' ? '#166534' : '#991b1b', border: '1px solid currentColor', display: 'flex', alignItems: 'center', gap: '8px' }}>
+             {message.type === 'success' ? <FiCheck /> : <FiAlertCircle />} {message.text}
           </div>
       )}
 
-      {/* --- DIGITAL ID CARD VISUAL --- */}
       <div style={styles.idCard} className="printable-card">
-          <div style={styles.idHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <FiActivity size={24} color="#3b82f6" />
-                  <span style={{ fontWeight: '700', fontSize: '1.2rem', letterSpacing: '-0.5px' }}>Algo<span style={{color: '#3b82f6'}}>Med</span> ID</span>
+          <div style={styles.idHeader} className="flex-between">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FiActivity size={20} color="#3b82f6" />
+                  <span style={{ fontWeight: '700', fontSize: '1rem', letterSpacing: '-0.5px' }}>Algo<span style={{color: '#3b82f6'}}>Med</span> ID</span>
               </div>
-              <span style={styles.idLabel}>Official Medical Record</span>
+              <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '1.5px', opacity: 0.7 }}>Official Record</span>
           </div>
-          <div style={styles.idGrid}>
-              <div style={styles.idItem}>
-                  <div style={styles.idKey}>Blood Group</div>
-                  <div style={styles.idValue}>{formData.bloodGroup || '--'}</div>
+          <div className="id-grid">
+              <div className="id-item">
+                  <div style={{ fontSize: '0.65rem', opacity: 0.8 }}>Blood Group</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: '700' }}>{formData.bloodGroup || '--'}</div>
               </div>
-              <div style={styles.idItem}>
-                  <div style={styles.idKey}>Date of Birth</div>
-                  <div style={styles.idValue}>{formData.dateOfBirth || '--'}</div>
+              <div className="id-item">
+                  <div style={{ fontSize: '0.65rem', opacity: 0.8 }}>Date of Birth</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: '700' }}>{formData.dateOfBirth || '--'}</div>
               </div>
-              <div style={styles.idItem}>
-                  <div style={styles.idKey}>Emergency Contact</div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>{formData.emergencyContact.phone || '--'}</div>
-                  <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{formData.emergencyContact.name}</div>
+              <div className="id-item">
+                  <div style={{ fontSize: '0.65rem', opacity: 0.8 }}>Emergency</div>
+                  <div style={{ fontSize: '0.8rem', fontWeight: '600' }}>{formData.emergencyContact.phone || '--'}</div>
+                  <div style={{ fontSize: '0.6rem', opacity: 0.8 }}>{formData.emergencyContact.name}</div>
               </div>
-              <div style={styles.idItem}>
-                  <div style={styles.idKey}>Known Allergies</div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>{formData.allergies.length > 0 ? `${formData.allergies.length} Active` : 'None'}</div>
+              <div className="id-item">
+                  <div style={{ fontSize: '0.65rem', opacity: 0.8 }}>Allergies</div>
+                  <div style={{ fontSize: '0.8rem', fontWeight: '600' }}>{formData.allergies.length > 0 ? `${formData.allergies.length} Active` : 'None'}</div>
               </div>
           </div>
-          {/* Decorative Circles */}
-          <div style={{ position: 'absolute', right: -20, bottom: -20, width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}></div>
+          <div style={{ position: 'absolute', right: -15, bottom: -15, width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}></div>
       </div>
 
       <form id="profile-form" onSubmit={handleSubmit}>
-        <div style={styles.mainGrid} className="responsive-grid">
+        <div className="main-layout-grid">
             
             {/* --- LEFT COLUMN: FORMS --- */}
             <div>
@@ -295,7 +236,7 @@ const PatientProfile = () => {
                         <FiUser style={styles.sectionIcon} />
                         <h3 style={styles.sectionTitle}>Essential Vitals</h3>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px' }}>
+                    <div className="vitals-grid">
                         <div>
                             <label style={styles.label}>DOB</label>
                             <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} style={styles.input} />
@@ -318,42 +259,45 @@ const PatientProfile = () => {
                     </div>
                 </div>
 
-                {/* 2. Medical History (Chips Layout) */}
+                {/* 2. Medical History */}
                 <div style={styles.card}>
-                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                     <div style={{ ...styles.sectionHeader, justifyContent: 'space-between', border: 'none', paddingBottom: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <FiActivity style={styles.sectionIcon} />
-                            <h3 style={styles.sectionTitle}>Conditions & History</h3>
+                            <h3 style={styles.sectionTitle}>Conditions</h3>
                         </div>
                         <button type="button" onClick={() => addItem('medicalHistory', { condition: '', diagnosedDate: '', status: 'Active' })} style={styles.btnSmall}>
                             <FiPlus /> Add
                         </button>
                     </div>
+                    <div style={{ borderBottom: '1px solid #f1f5f9', marginBottom: '15px' }}></div>
 
-                    {formData.medicalHistory.length === 0 && <div style={{ color: '#94a3b8', fontStyle: 'italic', padding: '10px' }}>No medical conditions listed.</div>}
+                    {formData.medicalHistory.length === 0 && <div style={{ color: '#94a3b8', fontStyle: 'italic', padding: '8px', fontSize: '0.85rem' }}>No medical conditions listed.</div>}
                     
                     {formData.medicalHistory.map((item, index) => (
-                        <div key={index} style={styles.listItem}>
-                             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '10px' }}>
-                                 <input placeholder="Condition (e.g. Diabetes)" value={item.condition} onChange={(e) => handleArrayChange('medicalHistory', index, 'condition', e.target.value)} style={{...styles.input, padding: '8px'}} />
-                                 <input type="date" value={item.diagnosedDate ? item.diagnosedDate.split('T')[0] : ''} onChange={(e) => handleArrayChange('medicalHistory', index, 'diagnosedDate', e.target.value)} style={{...styles.input, padding: '8px'}} />
-                                 <select value={item.status} onChange={(e) => handleArrayChange('medicalHistory', index, 'status', e.target.value)} style={{...styles.select, padding: '8px'}}>
+                        <div key={index} style={styles.listItem} className="list-item-wrapper">
+                             <div className="list-inputs-grid-3">
+                                 <input placeholder="Condition" value={item.condition} onChange={(e) => handleArrayChange('medicalHistory', index, 'condition', e.target.value)} style={{...styles.input, padding: '6px 8px'}} />
+                                 <input type="date" value={item.diagnosedDate ? item.diagnosedDate.split('T')[0] : ''} onChange={(e) => handleArrayChange('medicalHistory', index, 'diagnosedDate', e.target.value)} style={{...styles.input, padding: '6px 8px'}} />
+                                 <select value={item.status} onChange={(e) => handleArrayChange('medicalHistory', index, 'status', e.target.value)} style={{...styles.select, padding: '6px 8px'}}>
                                     <option value="Active">Active</option>
                                     <option value="Managed">Managed</option>
                                     <option value="Cured">Cured</option>
                                  </select>
                              </div>
-                             <button type="button" onClick={() => removeItem('medicalHistory', index)} style={{...styles.btnIcon, color: '#ef4444'}}>
-                                 <FiTrash2 />
-                             </button>
+                             <div className="list-action">
+                                <button type="button" onClick={() => removeItem('medicalHistory', index)} style={{...styles.btnIcon, color: '#ef4444'}}>
+                                    <FiTrash2 size={16} />
+                                </button>
+                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* 3. Allergies (Chips Layout) */}
+                {/* 3. Allergies */}
                 <div style={styles.card}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ ...styles.sectionHeader, justifyContent: 'space-between', border: 'none', paddingBottom: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <FiAlertCircle style={styles.sectionIcon} />
                             <h3 style={styles.sectionTitle}>Allergies</h3>
                         </div>
@@ -361,46 +305,52 @@ const PatientProfile = () => {
                             <FiPlus /> Add
                         </button>
                     </div>
+                    <div style={{ borderBottom: '1px solid #f1f5f9', marginBottom: '15px' }}></div>
 
                     {formData.allergies.map((item, index) => (
-                        <div key={index} style={styles.listItem}>
-                             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '2fr 2fr 1fr', gap: '10px' }}>
-                                 <input placeholder="Allergen (e.g. Peanuts)" value={item.allergen} onChange={(e) => handleArrayChange('allergies', index, 'allergen', e.target.value)} style={{...styles.input, padding: '8px'}} />
-                                 <input placeholder="Reaction" value={item.reaction} onChange={(e) => handleArrayChange('allergies', index, 'reaction', e.target.value)} style={{...styles.input, padding: '8px'}} />
-                                 <select value={item.severity} onChange={(e) => handleArrayChange('allergies', index, 'severity', e.target.value)} style={{...styles.select, padding: '8px'}}>
+                        <div key={index} style={styles.listItem} className="list-item-wrapper">
+                             <div className="list-inputs-grid-allergy">
+                                 <input placeholder="Allergen" value={item.allergen} onChange={(e) => handleArrayChange('allergies', index, 'allergen', e.target.value)} style={{...styles.input, padding: '6px 8px'}} />
+                                 <input placeholder="Reaction" value={item.reaction} onChange={(e) => handleArrayChange('allergies', index, 'reaction', e.target.value)} style={{...styles.input, padding: '6px 8px'}} />
+                                 <select value={item.severity} onChange={(e) => handleArrayChange('allergies', index, 'severity', e.target.value)} style={{...styles.select, padding: '6px 8px'}}>
                                     <option value="Mild">Mild</option>
                                     <option value="Moderate">Moderate</option>
                                     <option value="Severe">Severe</option>
                                  </select>
                              </div>
-                             <button type="button" onClick={() => removeItem('allergies', index)} style={{...styles.btnIcon, color: '#ef4444'}}>
-                                 <FiTrash2 />
-                             </button>
+                             <div className="list-action">
+                                <button type="button" onClick={() => removeItem('allergies', index)} style={{...styles.btnIcon, color: '#ef4444'}}>
+                                    <FiTrash2 size={16} />
+                                </button>
+                             </div>
                         </div>
                     ))}
                 </div>
 
                 {/* 4. Medications */}
                 <div style={styles.card}>
-                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                     <div style={{ ...styles.sectionHeader, justifyContent: 'space-between', border: 'none', paddingBottom: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <FiCheckCircle style={styles.sectionIcon} />
-                            <h3 style={styles.sectionTitle}>Current Medications</h3>
+                            <h3 style={styles.sectionTitle}>Medications</h3>
                         </div>
                         <button type="button" onClick={() => addItem('currentMedications', { name: '', dosage: '', frequency: '' })} style={styles.btnSmall}>
                             <FiPlus /> Add
                         </button>
                     </div>
-                     {formData.currentMedications.map((item, index) => (
-                        <div key={index} style={styles.listItem}>
-                             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '10px' }}>
-                                 <input placeholder="Medication Name" value={item.name} onChange={(e) => handleArrayChange('currentMedications', index, 'name', e.target.value)} style={{...styles.input, padding: '8px'}} />
-                                 <input placeholder="Dosage" value={item.dosage} onChange={(e) => handleArrayChange('currentMedications', index, 'dosage', e.target.value)} style={{...styles.input, padding: '8px'}} />
-                                 <input placeholder="Frequency" value={item.frequency} onChange={(e) => handleArrayChange('currentMedications', index, 'frequency', e.target.value)} style={{...styles.input, padding: '8px'}} />
+                    <div style={{ borderBottom: '1px solid #f1f5f9', marginBottom: '15px' }}></div>
+                      {formData.currentMedications.map((item, index) => (
+                        <div key={index} style={styles.listItem} className="list-item-wrapper">
+                             <div className="list-inputs-grid-3">
+                                 <input placeholder="Medication Name" value={item.name} onChange={(e) => handleArrayChange('currentMedications', index, 'name', e.target.value)} style={{...styles.input, padding: '6px 8px'}} />
+                                 <input placeholder="Dosage" value={item.dosage} onChange={(e) => handleArrayChange('currentMedications', index, 'dosage', e.target.value)} style={{...styles.input, padding: '6px 8px'}} />
+                                 <input placeholder="Frequency" value={item.frequency} onChange={(e) => handleArrayChange('currentMedications', index, 'frequency', e.target.value)} style={{...styles.input, padding: '6px 8px'}} />
                              </div>
-                             <button type="button" onClick={() => removeItem('currentMedications', index)} style={{...styles.btnIcon, color: '#ef4444'}}>
-                                 <FiTrash2 />
-                             </button>
+                             <div className="list-action">
+                                <button type="button" onClick={() => removeItem('currentMedications', index)} style={{...styles.btnIcon, color: '#ef4444'}}>
+                                    <FiTrash2 size={16} />
+                                </button>
+                             </div>
                         </div>
                     ))}
                 </div>
@@ -409,20 +359,20 @@ const PatientProfile = () => {
             {/* --- RIGHT COLUMN: WIDGETS --- */}
             <div>
                 {/* Widget 1: BMI Calculator */}
-                <div style={{ ...styles.card, position: 'sticky', top: '20px' }}>
-                    <h3 style={{ ...styles.sectionTitle, marginBottom: '15px' }}>Body Mass Index</h3>
+                <div style={{ ...styles.card, position: 'sticky', top: '10px' }}>
+                    <h3 style={{ ...styles.sectionTitle, marginBottom: '12px' }}>Body Mass Index</h3>
                     {bmiData ? (
                         <div style={styles.bmiWidget}>
                             <div style={styles.bmiValue}>{bmiData.value}</div>
                             <div style={styles.bmiStatus}>{bmiData.status}</div>
-                            <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '10px' }}>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '8px' }}>
                                 Based on {formData.height}cm / {formData.weight}kg
                             </div>
                         </div>
                     ) : (
-                        <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px', fontSize: '0.9rem' }}>
-                            <FiInfo style={{ marginBottom: '5px', fontSize: '1.2rem' }} /> <br/>
-                            Enter Height & Weight to calculate BMI automatically.
+                        <div style={{ textAlign: 'center', color: '#94a3b8', padding: '15px', fontSize: '0.85rem' }}>
+                            <FiInfo style={{ marginBottom: '5px', fontSize: '1rem' }} /> <br/>
+                            Enter Height & Weight to calculate BMI.
                         </div>
                     )}
                 </div>
@@ -430,23 +380,23 @@ const PatientProfile = () => {
                 {/* Widget 2: Profile Strength */}
                 <div style={styles.card}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h3 style={{ ...styles.sectionTitle, fontSize: '0.95rem' }}>Profile Completion</h3>
-                        <span style={{ fontWeight: '700', color: profileStrength === 100 ? '#22c55e' : '#3b82f6' }}>{profileStrength}%</span>
+                        <h3 style={{ ...styles.sectionTitle, fontSize: '0.9rem' }}>Profile Completion</h3>
+                        <span style={{ fontWeight: '700', color: profileStrength === 100 ? '#22c55e' : '#3b82f6', fontSize: '0.9rem' }}>{profileStrength}%</span>
                     </div>
                     <div style={styles.progressBg}>
                         <div style={styles.progressFill}></div>
                     </div>
-                    <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '10px' }}>
-                        {profileStrength < 100 ? "Complete your lifestyle & emergency details to reach 100%." : "Great job! Your profile is complete."}
+                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '8px' }}>
+                        {profileStrength < 100 ? "Complete lifestyle & emergency to reach 100%." : "Profile complete."}
                     </p>
                 </div>
 
                 {/* Widget 3: Lifestyle Quick Edit */}
                 <div style={styles.card}>
-                    <h3 style={{ ...styles.sectionTitle, marginBottom: '15px' }}>Lifestyle Factors</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    <h3 style={{ ...styles.sectionTitle, marginBottom: '12px' }}>Lifestyle</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <div>
-                             <label style={styles.label}>Smoking Status</label>
+                             <label style={styles.label}>Smoking</label>
                              <select value={formData.lifestyle.smoking} onChange={(e) => handleNestedChange('lifestyle', 'smoking', e.target.value)} style={styles.select}>
                                 <option value="No">No</option>
                                 <option value="Yes">Yes</option>
@@ -454,7 +404,7 @@ const PatientProfile = () => {
                              </select>
                         </div>
                         <div>
-                             <label style={styles.label}>Alcohol Consumption</label>
+                             <label style={styles.label}>Alcohol</label>
                              <select value={formData.lifestyle.alcohol} onChange={(e) => handleNestedChange('lifestyle', 'alcohol', e.target.value)} style={styles.select}>
                                 <option value="No">No</option>
                                 <option value="Yes">Yes</option>
@@ -462,7 +412,7 @@ const PatientProfile = () => {
                              </select>
                         </div>
                          <div>
-                             <label style={styles.label}>Activity Level</label>
+                             <label style={styles.label}>Activity</label>
                              <select value={formData.lifestyle.activityLevel} onChange={(e) => handleNestedChange('lifestyle', 'activityLevel', e.target.value)} style={styles.select}>
                                 <option value="Sedentary">Sedentary</option>
                                 <option value="Moderate">Moderate</option>
@@ -474,8 +424,8 @@ const PatientProfile = () => {
                 
                  {/* Widget 4: Emergency Contact */}
                 <div style={{ ...styles.card, backgroundColor: '#fef2f2', borderColor: '#fecaca' }}>
-                    <h3 style={{ ...styles.sectionTitle, color: '#991b1b', marginBottom: '15px' }}>In Case of Emergency</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <h3 style={{ ...styles.sectionTitle, color: '#991b1b', marginBottom: '12px' }}>Emergency Contact</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <input placeholder="Contact Name" value={formData.emergencyContact.name} onChange={(e) => handleNestedChange('emergencyContact', 'name', e.target.value)} style={{ ...styles.input, borderColor: '#fca5a5' }} />
                         <input placeholder="Phone Number" value={formData.emergencyContact.phone} onChange={(e) => handleNestedChange('emergencyContact', 'phone', e.target.value)} style={{ ...styles.input, borderColor: '#fca5a5' }} />
                         <input placeholder="Relationship" value={formData.emergencyContact.relation} onChange={(e) => handleNestedChange('emergencyContact', 'relation', e.target.value)} style={{ ...styles.input, borderColor: '#fca5a5' }} />
@@ -486,11 +436,48 @@ const PatientProfile = () => {
         </div>
       </form>
       
-      {/* Print Media Query */}
       <style>{`
+        .header-flex { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .header-actions { display: flex; gap: 10px; }
+        .main-layout-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start; }
+        .vitals-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+        .id-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .id-item { background: rgba(255,255,255,0.1); padding: 10px; borderRadius: 8px; backdrop-filter: blur(5px); }
+        .page-title { fontSize: 2.25rem; fontWeight: 800; color: #1e293b; margin: 0; letter-spacing: -1px; line-height: 1.2; }
+        .sub-title { color: #64748b; margin-top: 4px; fontSize: 0.9rem; margin-bottom: 0; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        
+        .list-item-wrapper { display: flex; align-items: center; gap: 8px; }
+        .list-inputs-grid-3 { flex: 1; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; }
+        .list-inputs-grid-allergy { flex: 1; display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 8px; }
+        .list-action { display: flex; align-items: center; justify-content: center; }
+
         @media (max-width: 900px) {
-            .responsive-grid { grid-template-columns: 1fr !important; }
+            .main-layout-grid { grid-template-columns: 1fr; }
         }
+
+        @media (max-width: 768px) {
+            .mobile-scaler {
+                width: 125%; /* Inverse of 0.8 to fill screen width */
+                transform: scale(0.8);
+                transform-origin: top left;
+                margin-bottom: -20%; /* Remove whitespace at bottom caused by scaling */
+            }
+
+            .header-flex { flex-direction: column; align-items: stretch; gap: 10px; }
+            .header-actions { justify-content: space-between; }
+            .header-actions button { flex: 1; }
+            
+            .vitals-grid { grid-template-columns: 1fr 1fr; }
+            
+            .id-grid { grid-template-columns: repeat(2, 1fr); }
+            
+            .list-item-wrapper { flex-direction: column; align-items: stretch; position: relative; padding-right: 30px; }
+            .list-inputs-grid-3 { grid-template-columns: 1fr; gap: 8px; }
+            .list-inputs-grid-allergy { grid-template-columns: 1fr; gap: 8px; }
+            .list-action { position: absolute; top: 10px; right: 10px; }
+        }
+
         @media print {
             body * { visibility: hidden; }
             .printable-card, .printable-card * { visibility: visible; }

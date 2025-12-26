@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { sendChatMessage, getUserThreads, getThreadMessages, deleteThread } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { FiMessageSquare, FiX, FiMaximize2, FiMinimize2, FiArrowLeft, FiSend, FiTrash2, FiPlus } from 'react-icons/fi';
 
 const AIChatWidget = () => {
     const { user } = useAuth();
+    
+    // --- STATE MANAGEMENT ---
     const [isOpen, setIsOpen] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [view, setView] = useState('list');
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
     const [threads, setThreads] = useState([]);
     const [activeThreadId, setActiveThreadId] = useState(null);
@@ -16,14 +20,28 @@ const AIChatWidget = () => {
 
     const messagesEndRef = useRef(null);
 
-    // Fetch threads when widget opens
+    // 1. Handle Window Resize
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // 2. Load threads when opened
     useEffect(() => {
         if (isOpen && user) {
             loadThreads();
+            if (isMobile) {
+                document.body.style.overflow = 'hidden';
+            }
+        } else {
+            document.body.style.overflow = 'auto';
         }
-    }, [isOpen, user]);
+    }, [isOpen, user, isMobile]);
 
-    // Scroll to bottom of chat
+    // 3. Auto-scroll
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, view]);
@@ -64,24 +82,19 @@ const AIChatWidget = () => {
         const currentMsg = inputMessage;
         setInputMessage('');
 
-        // Optimistic UI update
         const newMessages = [...messages, { role: 'user', content: currentMsg }];
         setMessages(newMessages);
         setLoading(true);
 
         try {
-            // Send to API
             const res = await sendChatMessage(currentMsg, activeThreadId);
-
-            // Update state with AI response
             setMessages(prev => [...prev, { role: 'assistant', content: res.reply }]);
-
             if (!activeThreadId && res.threadId) {
                 setActiveThreadId(res.threadId);
                 loadThreads();
             }
         } catch (err) {
-            setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error processing your request." }]);
+            setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error." }]);
         } finally {
             setLoading(false);
         }
@@ -105,170 +118,167 @@ const AIChatWidget = () => {
 
     if (!user) return null;
 
-    // --- Styles ---
-    const widgetStyle = {
-        position: 'fixed',
-        bottom: '20px',
-        right: '20px',
-        zIndex: 1000,
-        fontFamily: 'Inter, system-ui, sans-serif'
-    };
-
-    const buttonStyle = {
-        width: '60px',
-        height: '60px',
-        borderRadius: '50%',
-        backgroundColor: '#007bff',
-        color: 'white',
-        border: 'none',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '24px',
-        transition: 'transform 0.2s'
-    };
-
-    const windowStyle = {
-        position: 'absolute',
-        bottom: '80px',
-        right: '0',
-        width: isExpanded ? '400px' : '350px',
-        height: isExpanded ? '600px' : '500px',
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        boxShadow: '0 5px 20px rgba(0,0,0,0.2)',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        border: '1px solid #eee'
-    };
-
-    const headerStyle = {
-        padding: '15px',
-        backgroundColor: '#007bff',
-        color: 'white',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderTopLeftRadius: '12px',
-        borderTopRightRadius: '12px'
-    };
-
-    const contentStyle = {
-        flex: 1,
-        overflowY: 'auto',
-        padding: '15px',
-        backgroundColor: '#f8f9fa'
-    };
-
-    const inputAreaStyle = {
-        padding: '15px',
-        borderTop: '1px solid #eee',
-        backgroundColor: 'white',
-        display: 'flex',
-        gap: '10px'
+    // --- RESPONSIVE STYLES ---
+    const styles = {
+        widgetContainer: {
+            position: 'fixed', 
+            bottom: '20px', 
+            right: '20px', 
+            zIndex: 1000,
+            fontFamily: 'Inter, system-ui, sans-serif'
+        },
+        toggleBtn: {
+            width: '48px', height: '48px', borderRadius: '50%',
+            backgroundColor: '#2563eb', color: 'white', border: 'none',
+            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)', cursor: 'pointer',
+            display: isOpen && isMobile ? 'none' : 'flex',
+            alignItems: 'center', justifyContent: 'center',
+            fontSize: '1.2rem', transition: 'transform 0.2s'
+        },
+        window: {
+            position: isMobile ? 'fixed' : 'absolute',
+            top: isMobile ? 0 : 'auto',
+            left: isMobile ? 0 : 'auto',
+            bottom: isMobile ? 0 : '70px',
+            right: isMobile ? 0 : '0',
+            width: isMobile ? '100%' : (isExpanded ? '360px' : '300px'),
+            height: isMobile ? '100%' : (isExpanded ? '550px' : '420px'),
+            backgroundColor: 'white',
+            borderRadius: isMobile ? '0' : '12px',
+            boxShadow: isMobile ? 'none' : '0 10px 25px -5px rgba(0,0,0,0.15)',
+            display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            border: isMobile ? 'none' : '1px solid #e2e8f0',
+            fontSize: '0.9rem',
+            zIndex: 1001
+        },
+        header: {
+            padding: '12px 16px',
+            backgroundColor: '#2563eb', color: 'white',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            borderBottom: '1px solid #1d4ed8',
+            flexShrink: 0
+        },
+        headerTitle: { fontWeight: '600', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' },
+        iconBtn: { background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '8px', opacity: 0.9 },
+        
+        content: { 
+            flex: 1, 
+            overflowY: 'auto', 
+            padding: '16px', 
+            backgroundColor: '#f8fafc',
+            overscrollBehavior: 'contain'
+        },
+        
+        newChatBtn: {
+            width: '100%', padding: '12px', marginBottom: '16px',
+            backgroundColor: '#eff6ff', border: '1px dashed #bfdbfe', borderRadius: '8px',
+            color: '#2563eb', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+        },
+        threadItem: {
+            padding: '12px', marginBottom: '8px', backgroundColor: 'white',
+            borderRadius: '8px', border: '1px solid #f1f5f9', cursor: 'pointer',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            fontSize: '0.9rem', transition: 'background 0.2s'
+        },
+        
+        messageRow: (role) => ({
+            display: 'flex', justifyContent: role === 'user' ? 'flex-end' : 'flex-start',
+            marginBottom: '12px'
+        }),
+        bubble: (role) => ({
+            maxWidth: '85%', padding: '10px 14px', borderRadius: '12px',
+            backgroundColor: role === 'user' ? '#2563eb' : 'white',
+            color: role === 'user' ? 'white' : '#1e293b',
+            boxShadow: role === 'assistant' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+            border: role === 'assistant' ? '1px solid #e2e8f0' : 'none',
+            fontSize: '0.9rem', lineHeight: '1.5', wordWrap: 'break-word'
+        }),
+        
+        inputArea: {
+            padding: '12px', borderTop: '1px solid #f1f5f9', backgroundColor: 'white',
+            display: 'flex', gap: '8px', alignItems: 'center',
+            paddingBottom: isMobile ? '20px' : '12px'
+        },
+        input: {
+            flex: 1, padding: '10px 14px', borderRadius: '24px', border: '1px solid #cbd5e1',
+            outline: 'none', fontSize: '1rem',
+            backgroundColor: '#f8fafc'
+        },
+        sendBtn: {
+            padding: '10px', width: '40px', height: '40px', borderRadius: '50%', border: 'none',
+            backgroundColor: '#2563eb', color: 'white', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            opacity: (loading || !inputMessage.trim()) ? 0.6 : 1,
+            flexShrink: 0
+        }
     };
 
     return (
-        <div style={widgetStyle}>
+        <div style={styles.widgetContainer}>
             {isOpen && (
-                <div style={windowStyle}>
+                <div style={styles.window}>
                     {/* Header */}
-                    <div style={headerStyle}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={styles.header}>
+                        <div style={styles.headerTitle}>
                             {view === 'chat' && (
-                                <button
-                                    onClick={() => setView('list')}
-                                    style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '1.2rem' }}
-                                >
-                                    ←
+                                <button onClick={() => setView('list')} style={{...styles.iconBtn, marginRight: '4px'}}>
+                                    <FiArrowLeft size={20} />
                                 </button>
                             )}
-                            <span style={{ fontWeight: '600' }}>AlgoMed AI</span>
+                            <FiMessageSquare size={20} />
+                            <span>AlgoMed AI</span>
                         </div>
-                        <div>
-                            <button
-                                onClick={() => setIsExpanded(!isExpanded)}
-                                style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', marginRight: '10px' }}
-                            >
-                                {isExpanded ? '↙' : '↗'}
-                            </button>
-                            <button
-                                onClick={() => setIsOpen(false)}
-                                style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '1.2rem' }}
-                            >
-                                ×
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                            {!isMobile && (
+                                <button onClick={() => setIsExpanded(!isExpanded)} style={styles.iconBtn} title={isExpanded ? "Collapse" : "Expand"}>
+                                    {isExpanded ? <FiMinimize2 size={16} /> : <FiMaximize2 size={16} />}
+                                </button>
+                            )}
+                            <button onClick={() => setIsOpen(false)} style={styles.iconBtn} title="Close">
+                                <FiX size={20} />
                             </button>
                         </div>
                     </div>
 
-                    {/* Body */}
-                    <div style={contentStyle}>
+                    {/* Content */}
+                    <div style={styles.content}>
                         {view === 'list' ? (
-                            <div>
-                                <button
-                                    onClick={startNewChat}
-                                    style={{
-                                        width: '100%', padding: '12px', marginBottom: '15px',
-                                        backgroundColor: '#e9ecef', border: 'none', borderRadius: '8px',
-                                        color: '#007bff', fontWeight: '600', cursor: 'pointer'
-                                    }}
-                                >
-                                    + New Conversation
+                            <>
+                                <button onClick={startNewChat} style={styles.newChatBtn}>
+                                    <FiPlus size={18} /> New Conversation
                                 </button>
-
-                                <h4 style={{ margin: '0 0 10px 0', fontSize: '0.9rem', color: '#6c757d' }}>Recent Chats</h4>
-
-                                {threads.length === 0 && <p style={{ fontSize: '0.8rem', color: '#adb5bd', textAlign: 'center' }}>No history yet.</p>}
+                                
+                                <h4 style={{ margin: '0 0 12px 4px', fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Recent</h4>
+                                
+                                {threads.length === 0 && <p style={{ fontSize: '0.85rem', color: '#cbd5e1', textAlign: 'center', marginTop: '30px' }}>No chat history.</p>}
 
                                 {threads.map(thread => (
-                                    <div
-                                        key={thread._id}
-                                        onClick={() => openThread(thread._id)}
-                                        style={{
-                                            padding: '12px', marginBottom: '8px', backgroundColor: 'white',
-                                            borderRadius: '8px', border: '1px solid #eee', cursor: 'pointer',
-                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                                        }}
-                                    >
-                                        <div style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.9rem' }}>
-                                            {thread.title}
+                                    <div key={thread._id} onClick={() => openThread(thread._id)} style={styles.threadItem}>
+                                        <div style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '500' }}>
+                                            {thread.title || "Untitled Chat"}
                                         </div>
-                                        <button
+                                        <button 
                                             onClick={(e) => handleDeleteThread(e, thread._id)}
-                                            style={{ border: 'none', background: 'none', color: '#dc3545', cursor: 'pointer', marginLeft: '10px' }}
+                                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '8px', display: 'flex' }}
                                         >
-                                            🗑
+                                            <FiTrash2 size={16} />
                                         </button>
                                     </div>
                                 ))}
-                            </div>
+                            </>
                         ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
                                 {messages.map((msg, idx) => (
-                                    <div
-                                        key={idx}
-                                        style={{
-                                            alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                                            maxWidth: '80%',
-                                            padding: '10px 14px',
-                                            borderRadius: '12px',
-                                            backgroundColor: msg.role === 'user' ? '#007bff' : 'white',
-                                            color: msg.role === 'user' ? 'white' : '#333',
-                                            boxShadow: msg.role === 'assistant' ? '0 2px 5px rgba(0,0,0,0.05)' : 'none',
-                                            border: msg.role === 'assistant' ? '1px solid #eee' : 'none',
-                                            fontSize: '0.95rem',
-                                            lineHeight: '1.4'
-                                        }}
-                                    >
-                                        {msg.content}
+                                    <div key={idx} style={styles.messageRow(msg.role)}>
+                                        <div style={styles.bubble(msg.role)}>
+                                            {msg.content}
+                                        </div>
                                     </div>
                                 ))}
                                 {loading && (
-                                    <div style={{ alignSelf: 'flex-start', padding: '10px', color: '#6c757d', fontStyle: 'italic', fontSize: '0.8rem' }}>
-                                        AI is typing...
+                                    <div style={{ alignSelf: 'flex-start', marginLeft: '4px', marginTop: '4px', color: '#94a3b8', fontSize: '0.8rem', fontStyle: 'italic' }}>
+                                        AI is thinking...
                                     </div>
                                 )}
                                 <div ref={messagesEndRef} />
@@ -276,40 +286,27 @@ const AIChatWidget = () => {
                         )}
                     </div>
 
-                    {/* Footer Input (Only in Chat View) */}
+                    {/* Footer */}
                     {view === 'chat' && (
-                        <form onSubmit={handleSendMessage} style={inputAreaStyle}>
+                        <form onSubmit={handleSendMessage} style={styles.inputArea}>
                             <input
                                 type="text"
                                 value={inputMessage}
                                 onChange={(e) => setInputMessage(e.target.value)}
-                                placeholder="Ask about your health..."
-                                style={{
-                                    flex: 1, padding: '10px', borderRadius: '20px', border: '1px solid #ced4da', outline: 'none'
-                                }}
+                                placeholder="Ask a health question..."
+                                style={styles.input}
                             />
-                            <button
-                                type="submit"
-                                disabled={loading || !inputMessage.trim()}
-                                style={{
-                                    padding: '10px 15px', borderRadius: '20px', border: 'none',
-                                    backgroundColor: '#007bff', color: 'white', cursor: 'pointer',
-                                    opacity: (loading || !inputMessage.trim()) ? 0.6 : 1
-                                }}
-                            >
-                                Send
+                            <button type="submit" disabled={loading || !inputMessage.trim()} style={styles.sendBtn}>
+                                <FiSend size={18} />
                             </button>
                         </form>
                     )}
                 </div>
             )}
 
-            {/* Floating Toggle Button */}
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                style={buttonStyle}
-            >
-                {isOpen ? '×' : '💬'}
+            {/* Toggle Button */}
+            <button onClick={() => setIsOpen(!isOpen)} style={styles.toggleBtn}>
+                {isOpen && !isMobile ? <FiX size={24} /> : <FiMessageSquare size={24} />}
             </button>
         </div>
     );

@@ -1,41 +1,73 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
-// Removed AIChatWidget import
 
 const DashboardLayout = () => {
-  const layoutContainer = {
-    minHeight: '100vh',
-    backgroundColor: '#f1f5f9', 
-  };
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const location = useLocation();
 
-  const mainWrapper = {
-    marginLeft: '260px', 
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: '100vh',
-    transition: 'margin-left 0.3s ease' 
-  };
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setIsSidebarOpen(true); 
+      } else {
+        setIsSidebarOpen(false); 
+      }
+    };
 
-  const pageContent = {
-    flex: 1,
-    padding: '32px', 
-    overflowX: 'hidden' 
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile) {
+      setIsSidebarOpen(false);
+    }
+  }, [location, isMobile]);
+
+  const styles = {
+    layoutContainer: {
+      minHeight: '100vh',
+      backgroundColor: '#f1f5f9',
+      fontSize: '0.9rem', 
+    },
+    mainWrapper: {
+      marginLeft: isMobile ? '0' : '210px', 
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: '100vh',
+      transition: 'margin-left 0.3s ease-in-out',
+      width: isMobile ? '100%' : 'auto'
+    },
+    pageContent: {
+      flex: 1,
+      padding: isMobile ? '16px' : '24px', 
+      overflowX: 'hidden'
+    }
   };
 
   return (
-    <div style={layoutContainer}>
-      <Sidebar />
-      <div style={mainWrapper}>
-        <Navbar />
+    <div style={styles.layoutContainer}>
+      <Sidebar 
+        isOpen={isSidebarOpen} 
+        onClose={() => setIsSidebarOpen(false)} 
+        isMobile={isMobile}
+      />
+      
+      <div style={styles.mainWrapper}>
+        <Navbar 
+            onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+            isMobile={isMobile}
+        />
         
-        <main style={pageContent}>
+        <main style={styles.pageContent}>
           <Outlet />
         </main>
       </div>
-      
-      {/* AIChatWidget removed for cleaner menu-based integration */}
     </div>
   );
 };

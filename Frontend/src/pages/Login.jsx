@@ -60,7 +60,7 @@ const Login = () => {
       display: 'flex', justifyContent: 'center', alignItems: 'center',
       minHeight: '100vh',
       backgroundColor: '#f8fafc',
-      padding: '20px',
+      padding: '16px',
       fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       position: 'relative',
       overflow: 'hidden'
@@ -70,35 +70,36 @@ const Login = () => {
     bgGrid: {
       position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
       backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)',
-      backgroundSize: '30px 30px',
+      backgroundSize: '24px 24px',
       opacity: 1,
       zIndex: 0
     },
     blob1: {
       position: 'absolute', top: '-10%', left: '-5%',
-      width: '600px', height: '600px',
+      width: '480px', height: '480px',
       backgroundColor: theme.blobColor,
       borderRadius: '50%',
-      filter: 'blur(80px)',
+      filter: 'blur(60px)',
       zIndex: 0,
       animation: 'float 25s infinite ease-in-out'
     },
     blob2: {
       position: 'absolute', bottom: '-10%', right: '-5%',
-      width: '500px', height: '500px',
+      width: '400px', height: '400px',
       backgroundColor: theme.blobColor,
       borderRadius: '50%',
-      filter: 'blur(80px)',
+      filter: 'blur(60px)',
       zIndex: 0,
       animation: 'float 20s infinite ease-in-out reverse'
     },
 
     // --- SPLIT LAYOUT PANEL ---
     splitLayout: {
-      display: 'flex', width: '100%', maxWidth: '1000px',
-      minHeight: '600px',
-      backgroundColor: 'white', borderRadius: '24px',
-      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+      display: 'flex', width: '100%', 
+      maxWidth: '800px', 
+      minHeight: '480px', 
+      backgroundColor: 'white', borderRadius: '16px',
+      boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.15)',
       overflow: 'hidden',
       border: '1px solid rgba(255,255,255,0.8)',
       position: 'relative', zIndex: 10
@@ -106,72 +107,118 @@ const Login = () => {
 
     // --- LEFT PANEL ---
     leftPanel: {
-      flex: 1, padding: '60px', display: 'flex', flexDirection: 'column',
+      flex: 1, 
+      padding: '48px',
+      display: 'flex', flexDirection: 'column',
       justifyContent: 'center', color: 'white', background: theme.gradient,
       position: 'relative'
     },
     leftPanelLogo: {
-      position: 'absolute', top: '40px', left: '40px',
+      position: 'absolute', top: '32px', left: '32px',
       display: 'flex', alignItems: 'center', gap: '10px'
     },
     leftLogoIcon: {
-      width: '32px', height: '32px', borderRadius: '8px',
+      width: '26px', height: '26px', borderRadius: '6px',
       backgroundColor: 'rgba(255, 255, 255, 0.2)',
-      backdropFilter: 'blur(4px)',
+      backdropFilter: 'blur(3px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       border: '1px solid rgba(255, 255, 255, 0.3)'
     },
     leftLogoText: {
-      fontSize: '1.4rem', fontWeight: '800', color: 'white', letterSpacing: '-0.5px'
+      fontSize: '1.1rem',
+      fontWeight: '800', color: 'white', letterSpacing: '-0.5px'
     },
-    heroTitle: { fontSize: '2.5rem', fontWeight: '800', lineHeight: 1.1, marginBottom: '20px', letterSpacing: '-0.02em' },
-    heroSub: { fontSize: '1.1rem', opacity: 0.9, lineHeight: 1.6, maxWidth: '400px' },
+    heroTitle: { 
+      fontSize: '2rem',
+      fontWeight: '800', lineHeight: 1.1, marginBottom: '16px', letterSpacing: '-0.02em' 
+    },
+    heroSub: { 
+      fontSize: '0.85rem',
+      opacity: 0.9, lineHeight: 1.6, maxWidth: '320px' 
+    },
 
-    // --- RIGHT PANEL (Form) ---
+    // --- RIGHT PANEL ---
     rightPanel: {
-      flex: 1.1, padding: '50px', display: 'flex', flexDirection: 'column',
-      justifyContent: 'center', backgroundColor: '#ffffff'
+      flex: 1, 
+      padding: '40px',
+      display: 'flex', flexDirection: 'column',
+      justifyContent: 'center', backgroundColor: '#ffffff',
+      position: 'relative'
     },
 
-    // --- RESTORED HEADER CARD STYLES ---
+    // --- MOBILE BRANDING ---
+    mobileBrand: {
+      display: 'none',
+      alignItems: 'center', gap: '8px',
+      marginBottom: '24px', justifyContent: 'center'
+    },
+    mobileLogoIcon: {
+       width: '26px', height: '26px', borderRadius: '6px',
+       background: theme.gradient,
+       display: 'flex', alignItems: 'center', justifyContent: 'center',
+       color: 'white'
+    },
+    mobileLogoText: {
+       fontSize: '1.1rem', fontWeight: '800', color: theme.textMain
+    },
+
+    // --- HEADER CARD STYLES ---
     headerCard: {
-      display: 'flex', alignItems: 'center', gap: '16px',
-      padding: '16px', borderRadius: '12px',
+      display: 'flex', alignItems: 'center', gap: '12px',
+      padding: '12px',
+      borderRadius: '10px',
       backgroundColor: theme.headerBg,
       border: `1px solid ${theme.borderColor}`,
-      marginBottom: '24px'
+      marginBottom: '20px'
     },
     iconBox: {
-      width: '42px', height: '42px', borderRadius: '10px',
+      width: '34px', height: '34px', borderRadius: '8px',
       backgroundColor: theme.iconBg,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: '1.4rem', color: '#fff', flexShrink: 0
+      fontSize: '1rem', 
+      color: '#fff', flexShrink: 0
     },
-    headerTitle: { fontSize: '1.15rem', fontWeight: '700', color: theme.textMain, margin: 0, marginBottom: '2px' },
-    headerSub: { fontSize: '0.85rem', color: theme.textSub, margin: 0 },
+    headerTitle: { 
+      fontSize: '0.9rem',
+      fontWeight: '700', color: theme.textMain, margin: 0, marginBottom: '2px' 
+    },
+    headerSub: { 
+      fontSize: '0.75rem',
+      color: theme.textSub, margin: 0 
+    },
 
     // Form
-    inputGroup: { marginBottom: '16px' },
-    label: { display: 'block', marginBottom: '6px', color: '#374151', fontWeight: '600', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.03em' },
+    inputGroup: { marginBottom: '12px' },
+    label: { 
+      display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '600', 
+      fontSize: '0.7rem',
+      textTransform: 'uppercase', letterSpacing: '0.03em' 
+    },
     input: {
-      width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db',
-      fontSize: '0.95rem', outline: 'none', transition: 'all 0.2s',
+      width: '100%', 
+      padding: '10px',
+      borderRadius: '6px', border: '1px solid #d1d5db',
+      fontSize: '0.85rem',
+      outline: 'none', transition: 'all 0.2s',
       backgroundColor: '#f9fafb', color: theme.textMain
     },
-    // --- RESTORED BUTTON COLOR ---
+    
     ctaBtn: {
-      width: '100%', padding: '12px', backgroundColor: theme.primary, // Back to Blue
-      color: 'white', border: 'none', borderRadius: '8px',
-      fontSize: '0.95rem', fontWeight: '600', cursor: loading ? 'wait' : 'pointer',
+      width: '100%', 
+      padding: '10px',
+      backgroundColor: theme.primary,
+      color: 'white', border: 'none', borderRadius: '6px',
+      fontSize: '0.85rem',
+      fontWeight: '600', cursor: loading ? 'wait' : 'pointer',
       marginTop: '8px', transition: 'all 0.2s',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
     },
 
-    // --- COMPACT DEMO BOX ---
+    // --- DEMO BOX ---
     demoContainer: {
-        marginTop: '24px',
-        padding: '12px 16px',
-        borderRadius: '12px',
+        marginTop: '20px',
+        padding: '10px 14px',
+        borderRadius: '8px',
         backgroundColor: '#f8fafc',
         border: '1px dashed #cbd5e1',
         display: 'flex',
@@ -183,40 +230,49 @@ const Login = () => {
         display: 'flex', alignItems: 'center', gap: '10px'
     },
     demoIconCircle: {
-        width: '32px', height: '32px', borderRadius: '8px',
+        width: '26px', height: '26px', borderRadius: '6px',
         backgroundColor: 'rgba(37, 99, 235, 0.1)', 
         color: theme.primary,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: '0.9rem'
+        fontSize: '0.8rem' 
     },
     demoTextGroup: { display: 'flex', flexDirection: 'column' },
-    demoLabel: { fontSize: '0.85rem', fontWeight: '700', color: '#334155' },
-    demoSub: { fontSize: '0.75rem', color: '#64748b' },
+    demoLabel: { 
+      fontSize: '0.7rem', 
+      fontWeight: '700', color: '#334155' 
+    },
+    demoSub: { 
+      fontSize: '0.65rem',
+      color: '#64748b' 
+    },
     
     demoActionBtn: {
-        padding: '6px 12px',
-        fontSize: '0.50rem',
+        padding: '5px 10px',
+        fontSize: '0.7rem',
         fontWeight: '600',
         color: theme.primary,
         backgroundColor: 'white',
         border: `1px solid ${theme.borderColor}`,
-        borderRadius: '6px',
+        borderRadius: '5px',
         cursor: 'pointer',
         boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
         whiteSpace: 'nowrap',
-        display: 'flex', alignItems: 'center', gap: '6px',
+        display: 'flex', alignItems: 'center', gap: '5px',
         transition: 'all 0.2s'
     },
 
     signupPrompt: {
-      marginTop: '20px', textAlign: 'center', fontSize: '0.85rem', color: '#6b7280'
+      marginTop: '16px', textAlign: 'center', 
+      fontSize: '0.75rem',
+      color: '#6b7280'
     },
     link: { color: theme.primary, fontWeight: '600', textDecoration: 'none' },
 
     footer: {
-      marginTop: 'auto', paddingTop: '24px', borderTop: '1px solid #f3f4f6',
+      marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #f3f4f6',
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      fontSize: '0.75rem', color: '#9ca3af', width: '100%'
+      fontSize: '0.65rem',
+      color: '#9ca3af', width: '100%'
     },
     footerLinks: { display: 'flex', gap: '12px' },
     footerLink: { color: '#6b7280', textDecoration: 'none', transition: 'color 0.2s' }
@@ -235,10 +291,24 @@ const Login = () => {
         button:hover { opacity: 0.9; transform: translateY(-1px); }
         button:active { transform: translateY(0); }
         .footer-link:hover { color: ${theme.primary} !important; }
+        
         @media (max-width: 900px) {
-           .split-container { flexDirection: 'column'; height: auto; max-width: 500px; }
+           .split-container { 
+               flex-direction: column; 
+               height: auto; 
+               max-width: 400px !important;
+               width: 100%;
+               border-radius: 12px;
+           }
            .left-panel-visual { display: none !important; }
-           .right-panel-form { padding: 30px !important; }
+           .right-panel-form { padding: 24px !important; }
+           .mobile-brand-visual { display: flex !important; }
+        }
+        
+        @media (max-width: 480px) {
+            .page-container { padding: 12px; }
+            .right-panel-form { padding: 20px 16px !important; }
+            .footer { flex-direction: column; gap: 8px; }
         }
       `}</style>
 
@@ -249,12 +319,10 @@ const Login = () => {
 
       <div style={styles.splitLayout} className="split-container">
 
-        {/* LEFT PANEL */}
         <div style={styles.leftPanel} className="left-panel-visual">
-          {/* Branding */}
           <div style={styles.leftPanelLogo}>
             <div style={styles.leftLogoIcon}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 4V20M4 12H20" />
               </svg>
             </div>
@@ -266,15 +334,24 @@ const Login = () => {
             Sign in to manage your appointments, prescriptions, and health records securely.
           </p>
 
-          <div style={{ position: 'absolute', bottom: -60, left: -60, width: 250, height: 250, borderRadius: '50%', background: 'white', opacity: 0.08 }}></div>
+          <div style={{ position: 'absolute', bottom: -45, left: -45, width: 180, height: 180, borderRadius: '50%', background: 'white', opacity: 0.08 }}></div>
         </div>
 
-        {/* RIGHT PANEL */}
+        {/* RIGHT PANEL (Form) */}
         <div style={styles.rightPanel} className="right-panel-form">
 
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
 
-            {/* RESTORED HEADER CARD */}
+            <div style={styles.mobileBrand} className="mobile-brand-visual">
+                <div style={styles.mobileLogoIcon}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 4V20M4 12H20" />
+                    </svg>
+                </div>
+                <span style={styles.mobileLogoText}>AlgoMed.</span>
+            </div>
+
+            {/* HEADER CARD */}
             <div style={styles.headerCard}>
               <div style={styles.iconBox}>🔐</div>
               <div>
@@ -283,7 +360,7 @@ const Login = () => {
               </div>
             </div>
 
-            {error && <div style={{ backgroundColor: '#fee2e2', color: '#991b1b', padding: '10px', borderRadius: '8px', marginBottom: '20px', fontSize: '0.85rem', textAlign: 'center', border: '1px solid #fecaca' }}>{error}</div>}
+            {error && <div style={{ backgroundColor: '#fee2e2', color: '#991b1b', padding: '10px', borderRadius: '6px', marginBottom: '16px', fontSize: '0.75rem', textAlign: 'center', border: '1px solid #fecaca' }}>{error}</div>}
 
             <form onSubmit={handleSubmit}>
               <div style={styles.inputGroup}>
@@ -317,7 +394,7 @@ const Login = () => {
               </button>
             </form>
             
-            {/* COMPACT DEMO BAR */}
+            {/* DEMO BAR */}
             <div style={styles.demoContainer}>
                 <div style={styles.demoInfo}>
                     <div style={styles.demoIconCircle}><FiDatabase /></div>
@@ -328,7 +405,7 @@ const Login = () => {
                 </div>
 
                 <button type="button" onClick={fillDemoDoctor} style={styles.demoActionBtn} title="Auto-fill doctor credentials">
-                     Auto-Fill <FiArrowRight />
+                      Auto-Fill <FiArrowRight />
                 </button>
             </div>
 
