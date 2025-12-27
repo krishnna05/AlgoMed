@@ -31,11 +31,14 @@ const PORT = process.env.PORT || 8080;
 app.use(express.json());
 app.use(cookieParser());
 
+// --- UPDATE HERE ---
 const allowedOrigins = [
   "http://localhost:5173", 
   "http://localhost:3000", 
+  "https://algo-med.vercel.app", // Added your Vercel App
   process.env.CLIENT_URL 
 ];
+// -------------------
 
 app.use(
   cors({
@@ -81,7 +84,7 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: allowedOrigins, // This will now automatically include your Vercel app
     methods: ["GET", "POST"],
     credentials: true
   }
