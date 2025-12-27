@@ -1,367 +1,666 @@
+
+/* AlgoMed2/Frontend/src/pages/MyAppointments.jsx */
 import React, { useEffect, useState } from 'react';
 import { getMyAppointments, updateAppointmentStatus } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { FiClock, FiMapPin, FiVideo, FiCalendar } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import {
+    FiClock, FiMapPin, FiVideo, FiCalendar,
+    FiMessageSquare, FiCheckCircle, FiXCircle, FiSearch
+} from 'react-icons/fi';
 
-// --- DEMO DATA CONSTANTS ---
+import VideoCallWidget from '../components/VideoCallWidgetComponent';
+
 const DEMO_SCHEDULE_DATA = [
-  {
-    _id: 'demo_1',
-    appointmentDate: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(),
-    timeSlot: '10:00 AM',
-    type: 'Online',
-    status: 'Scheduled',
-    reason: 'Follow-up for Hypertension',
-    patientId: { name: 'Rohit Sharma', email: 'rohit@example.com' },
-    doctorId: { name: 'Dr. A. Gupta', email: 'doctor@algomed.com' },
-    videoLink: 'https://meet.google.com/abc-defg-hij'
-  },
-  {
-    _id: 'demo_2',
-    appointmentDate: new Date().toISOString(),
-    timeSlot: '02:30 PM',
-    type: 'Offline',
-    status: 'Scheduled',
-    reason: 'General Checkup & Blood Test',
-    patientId: { name: 'Sneha Patel', email: 'sneha@example.com' },
-    doctorId: { name: 'Dr. A. Gupta', email: 'doctor@algomed.com' }
-  },
-  {
-    _id: 'demo_3',
-    appointmentDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
-    timeSlot: '11:00 AM',
-    type: 'Online',
-    status: 'Completed',
-    reason: 'Skin Rash Consultation',
-    patientId: { name: 'Vikram Singh', email: 'vikram@example.com' },
-    doctorId: { name: 'Dr. A. Gupta', email: 'doctor@algomed.com' }
-  },
-  {
-    _id: 'demo_4',
-    appointmentDate: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(),
-    timeSlot: '04:00 PM',
-    type: 'Offline',
-    status: 'Cancelled',
-    reason: 'High Fever',
-    patientId: { name: 'Anjali Verma', email: 'anjali@example.com' },
-    doctorId: { name: 'Dr. A. Gupta', email: 'doctor@algomed.com' }
-  },
-  {
-    _id: 'demo_5',
-    appointmentDate: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString(),
-    timeSlot: '09:00 AM',
-    type: 'Online',
-    status: 'Scheduled',
-    reason: 'Diabetes Diet Consultation',
-    patientId: { name: 'Rahul Roy', email: 'rahul@example.com' },
-    doctorId: { name: 'Dr. A. Gupta', email: 'doctor@algomed.com' },
-    videoLink: 'https://meet.google.com/xyz-uvw-pqr'
-  }
+    {
+        _id: 'demo_1',
+        appointmentDate: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(),
+        timeSlot: '10:00 AM',
+        type: 'Online',
+        status: 'Scheduled',
+        reason: 'Follow-up for Hypertension',
+        patientId: { _id: 'p1', name: 'Rohit Sharma', email: 'rohit@example.com' },
+        doctorId: { _id: 'd1', name: 'Dr. A. Gupta', email: 'doctor@algomed.com' },
+    },
+    {
+        _id: 'demo_2',
+        appointmentDate: new Date().toISOString(),
+        timeSlot: '02:30 PM',
+        type: 'Offline',
+        status: 'Scheduled',
+        reason: 'General Checkup & Blood Test',
+        patientId: { _id: 'p2', name: 'Sneha Patel', email: 'sneha@example.com' },
+        doctorId: { _id: 'd1', name: 'Dr. A. Gupta', email: 'doctor@algomed.com' }
+    },
+    {
+        _id: 'demo_3',
+        appointmentDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
+        timeSlot: '11:00 AM',
+        type: 'Online',
+        status: 'Completed',
+        reason: 'Skin Rash Consultation',
+        patientId: { _id: 'p3', name: 'Vikram Singh', email: 'vikram@example.com' },
+        doctorId: { _id: 'd1', name: 'Dr. A. Gupta', email: 'doctor@algomed.com' }
+    },
+    {
+        _id: 'demo_4',
+        appointmentDate: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(),
+        timeSlot: '04:00 PM',
+        type: 'Offline',
+        status: 'Cancelled',
+        reason: 'High Fever',
+        patientId: { _id: 'p4', name: 'Anjali Verma', email: 'anjali@example.com' },
+        doctorId: { _id: 'd1', name: 'Dr. A. Gupta', email: 'doctor@algomed.com' }
+    }
 ];
 
 const MyAppointments = () => {
-  const { user } = useAuth();
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('All');
-  const [isDemoMode, setIsDemoMode] = useState(false);
+    const { user } = useAuth();
+    const navigate = useNavigate();
+    const [appointments, setAppointments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState('All');
+    const [isDemoMode, setIsDemoMode] = useState(false);
 
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
+    const [activeCallAppointment, setActiveCallAppointment] = useState(null);
 
-  const fetchAppointments = async () => {
-    setLoading(true);
-    try {
-      const res = await getMyAppointments();
-      const sorted = (res.data || []).sort((a, b) => {
-        return new Date(b.appointmentDate) - new Date(a.appointmentDate);
-      });
-      setAppointments(sorted);
-      setIsDemoMode(false);
-    } catch (error) {
-      console.error("Error fetching appointments:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    useEffect(() => {
+        fetchAppointments();
+    }, []);
 
-  const loadDemoData = () => {
-    if (window.confirm("Load sample schedule data? This is for demonstration only.")) {
+    const fetchAppointments = async () => {
         setLoading(true);
-        setTimeout(() => {
-            setAppointments(DEMO_SCHEDULE_DATA.sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate)));
-            setIsDemoMode(true);
+        try {
+            const res = await getMyAppointments();
+            const sorted = (res.data || []).sort((a, b) => {
+                return new Date(b.appointmentDate) - new Date(a.appointmentDate);
+            });
+            setAppointments(sorted);
+            setIsDemoMode(false);
+        } catch (error) {
+            console.error("Error fetching appointments:", error);
+        } finally {
             setLoading(false);
-        }, 600);
-    }
-  };
+        }
+    };
 
-  const handleStatusUpdate = async (id, newStatus) => {
-    if(isDemoMode) {
-        alert("Status updates are disabled in Demo Mode.");
-        return;
-    }
-    if (!window.confirm(`Are you sure you want to mark this appointment as ${newStatus}?`)) return;
+    const loadDemoData = () => {
+        if (window.confirm("Load sample schedule data? This is for demonstration only.")) {
+            setLoading(true);
+            setTimeout(() => {
+                setAppointments(DEMO_SCHEDULE_DATA.sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate)));
+                setIsDemoMode(true);
+                setLoading(false);
+            }, 600);
+        }
+    };
 
-    try {
-      await updateAppointmentStatus(id, { status: newStatus });
-      fetchAppointments();
-    } catch (error) {
-      alert("Failed to update status");
-      console.error(error);
-    }
-  };
+    const handleStatusUpdate = async (id, newStatus) => {
+        if (isDemoMode) {
+            alert("Status updates are disabled in Demo Mode.");
+            return;
+        }
+        if (!window.confirm(`Are you sure you want to mark this appointment as ${newStatus}?`)) return;
 
-  const filteredAppointments = appointments.filter(appt => {
-    if (filter === 'All') return true;
-    return appt.status === filter;
-  });
+        try {
+            await updateAppointmentStatus(id, { status: newStatus });
+            fetchAppointments();
+        } catch (error) {
+            alert("Failed to update status");
+            console.error(error);
+        }
+    };
 
-  return (
-    <div className="app-container">
-      <div className="header-section">
-        <div className="page-header-content">
-            <h1 className="page-title">Schedule</h1>
-            <p className="page-subtitle">Manage your appointments and visits</p>
-        </div>
-        
-        <div className="controls-container">
-            <div className="filter-container">
-            {['All', 'Scheduled', 'Completed', 'Cancelled'].map(f => (
-                <button 
-                    key={f} 
-                    className={`filter-btn ${filter === f ? 'active' : ''}`}
-                    onClick={() => setFilter(f)}>
-                {f}
-                </button>
-            ))}
-            </div>
-        </div>
-      </div>
+    const handleStartChat = (otherParty) => {
+        const route = user.role === 'doctor' ? '/doctor/messages' : '/patient/messages';
+        navigate(route, { state: { selectedUser: otherParty } });
+    };
 
-      {loading ? (
-        <div className="state-msg">
-            <div>Loading schedule...</div>
-        </div>
-      ) : filteredAppointments.length === 0 ? (
-        <div className="empty-card">
-          <FiCalendar size={32} color="#cbd5e1" style={{ marginBottom: '10px' }} />
-          <h3 className="empty-title">No appointments found.</h3>
-          <p className="empty-text">You don't have any appointments in this category.</p>
-          {!isDemoMode && (
-              <button onClick={loadDemoData} className="link-btn">
-                  Load Demo Data
-              </button>
-          )}
-        </div>
-      ) : (
-        <div className="list-container">
-          {filteredAppointments.map(appt => {
-            const dateObj = new Date(appt.appointmentDate);
-            const otherPartyName = user.role === 'patient' ? appt.doctorId?.name : appt.patientId?.name;
+    const handleJoinCall = (appointment) => {
+        setActiveCallAppointment(appointment);
+    };
 
-            return (
-              <div key={appt._id} className="appt-card">
-                <div className="card-content">
-                  {/* Left Section: Date & Info */}
-                  <div className="top-section">
-                    <div className="date-box">
-                        <span className="date-month">{dateObj.toLocaleString('default', { month: 'short' })}</span>
-                        <span className="date-day">{dateObj.getDate()}</span>
-                    </div>
+    const filteredAppointments = appointments.filter(appt => {
+        if (filter === 'All') return true;
+        return appt.status === filter;
+    });
 
-                    <div className="info-box">
-                        <div className="person-name">{otherPartyName || 'Unknown User'}</div>
-                        
-                        <div className="meta-row">
-                            <span className="meta-item"><FiClock /> {appt.timeSlot}</span>
-                            <span className="divider">|</span>
-                            {appt.type === 'Online' ? 
-                                <span className="meta-item online"><FiVideo /> Online</span> : 
-                                <span className="meta-item offline"><FiMapPin /> Clinic</span>
-                            }
-                        </div>
-                        
-                        <div className="reason-text">
-                            <span className="reason-label">Reason:</span> {appt.reason}
-                        </div>
+    const getInitials = (name) => {
+        return name ? name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '??';
+    };
 
-                        {appt.videoLink && appt.status === 'Scheduled' && (
-                        <a href={appt.videoLink} target="_blank" rel="noreferrer" className="video-link">
-                            <FiVideo /> Join Video Call
-                        </a>
-                        )}
-                    </div>
-                  </div>
-
-                  {/* Right/Bottom Section: Status & Actions */}
-                  <div className="action-section">
-                    <span className={`status-badge ${appt.status.toLowerCase()}`}>{appt.status}</span>
-
-                    {appt.status === 'Scheduled' && (
-                      <div className="btn-group">
-                        {user.role === 'patient' && (
-                          <button 
-                            className="action-btn cancel"
-                            onClick={() => handleStatusUpdate(appt._id, 'Cancelled')}
-                          >
-                            Cancel Visit
-                          </button>
-                        )}
-
-                        {user.role === 'doctor' && (
-                          <>
-                            <button 
-                              className="action-btn complete"
-                              onClick={() => handleStatusUpdate(appt._id, 'Completed')}
-                            >
-                              Mark Done
-                            </button>
-                            <button 
-                              className="action-btn cancel"
-                              onClick={() => handleStatusUpdate(appt._id, 'Cancelled')}
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
+    return (
+        <div className="app-container">
+            {/* --- HEADER SECTION --- */}
+            <div className="header-section">
+                <div className="header-text">
+                    <h1 className="page-title">Appointments</h1>
+                    <p className="page-subtitle">Manage your visits and consultations</p>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
 
-      {/* --- CSS --- */}
-      <style>{`
-        /* DESKTOP DEFAULTS */
-        .app-container { max-width: 850px; margin: 0 auto; width: 100%; padding: 0 0 30px 0; font-family: 'Inter', sans-serif; }
-        
-        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
-        .page-header-content { flex: 1; }
-        .page-title { font-size: 1.75rem; font-weight: 800; color: #1e293b; margin: 0; line-height: 1.2; }
-        .page-subtitle { margin: 4px 0 0; color: #64748b; font-size: 0.85rem; }
+                <div className="filter-wrapper">
+                    {['All', 'Scheduled', 'Completed', 'Cancelled'].map(f => (
+                        <button
+                            key={f}
+                            className={`filter-tab ${filter === f ? 'active' : ''}`}
+                            onClick={() => setFilter(f)}>
+                            {f}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
-        /* TOGGLE BAR */
-        .controls-container { display: flex; align-items: center; }
-        .filter-container { display: inline-flex; background-color: #f1f5f9; padding: 4px; border-radius: 10px; gap: 4px; border: 1px solid #e2e8f0; }
-        .filter-btn { padding: 6px 14px; border-radius: 7px; border: none; background-color: transparent; color: #64748b; cursor: pointer; font-size: 0.85rem; font-weight: 500; white-space: nowrap; transition: all 0.2s ease-in-out; position: relative; }
-        .filter-btn:hover:not(.active) { background-color: rgba(0,0,0,0.03); color: #475569; }
-        .filter-btn.active { background-color: white; color: #2563eb; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06); }
+            {/* --- CONTENT SECTION --- */}
+            {loading ? (
+                <div className="loading-state">
+                    <div className="spinner"></div>
+                    <p>Syncing schedule...</p>
+                </div>
+            ) : filteredAppointments.length === 0 ? (
+                <div className="empty-state">
+                    <div className="empty-icon"><FiCalendar /></div>
+                    <h3>No appointments found</h3>
+                    <p>You don't have any {filter.toLowerCase()} appointments.</p>
 
-        /* CARDS */
-        .list-container { display: flex; flex-direction: column; gap: 12px; }
-        .appt-card { background-color: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border: 1px solid #f1f5f9; transition: transform 0.2s; }
-        .card-content { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
-        
-        .top-section { display: flex; gap: 15px; align-items: flex-start; flex: 1; min-width: 0; }
-        
-        .date-box { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 60px; height: 60px; background-color: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; flex-shrink: 0; }
-        .date-day { font-size: 1.3rem; font-weight: 700; color: #334155; line-height: 1; }
-        .date-month { font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 600; margin-top: 2px; }
+                    {user.role === 'patient' ? (
+                        <button
+                            onClick={() => navigate('/find-doctors')}
+                            className="action-btn video-btn"
+                            style={{ marginTop: '12px', padding: '10px 20px', fontSize: '0.9rem' }}
+                        >
+                            <FiSearch className="btn-icon" />
+                            <span>Book an appointment</span>
+                        </button>
+                    ) : (
+                        !isDemoMode && (
+                            <button onClick={loadDemoData} className="link-btn">Load Demo Data</button>
+                        )
+                    )}
+                </div>
+            ) : (
+                <div className="cards-grid">
+                    {filteredAppointments.map(appt => {
+                        const dateObj = new Date(appt.appointmentDate);
+                        const isDoctor = user.role === 'doctor';
+                        const otherParty = isDoctor ? appt.patientId : appt.doctorId;
+                        const otherName = otherParty?.name || 'Unknown User';
+                        const statusClass = appt.status.toLowerCase();
 
-        .info-box { flex: 1; min-width: 0; }
-        .person-name { font-size: 1rem; font-weight: 600; color: #1e293b; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .meta-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 0.8rem; color: #64748b; flex-wrap: wrap; }
-        .meta-item { display: flex; align-items: center; gap: 4px; }
-        .meta-item.online { color: #6366f1; background: #eff6ff; padding: 2px 6px; border-radius: 4px; font-weight: 500;}
-        .meta-item.offline { color: #059669; background: #ecfdf5; padding: 2px 6px; border-radius: 4px; font-weight: 500;}
-        .divider { color: #cbd5e1; font-size: 0.7rem; }
-        
-        .reason-text { font-size: 0.85rem; color: #475569; background: #f8fafc; padding: 6px; border-radius: 6px; display: inline-block; margin-top: 4px; max-width: 100%; word-wrap: break-word;}
-        .reason-label { font-weight: 600; }
-        .video-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; color: #2563eb; font-size: 0.8rem; text-decoration: none; font-weight: 500; padding: 4px 8px; background: #eff6ff; border-radius: 6px; }
+                        return (
+                            <div key={appt._id} className="appt-card">
 
-        .action-section { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; min-width: 100px; }
-        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
-        .status-badge.scheduled { background-color: #dbeafe; color: #1e40af; }
-        .status-badge.completed { background-color: #dcfce7; color: #166534; }
-        .status-badge.cancelled { background-color: #fee2e2; color: #991b1b; }
+                                {/* 1. LEFT: DATE STRIP */}
+                                <div className="card-date-strip">
+                                    <span className="date-month">{dateObj.toLocaleString('default', { month: 'short' })}</span>
+                                    <span className="date-day">{dateObj.getDate()}</span>
+                                    <span className="date-year">{dateObj.getFullYear()}</span>
+                                </div>
 
-        .btn-group { display: flex; flex-direction: column; gap: 6px; width: 100%; }
-        .action-btn { padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.75rem; font-weight: 500; transition: all 0.2s; width: 100%; text-align: center; }
-        .action-btn.cancel { background-color: white; color: #e11d48; border: 1px solid #ffe4e6; }
-        .action-btn.cancel:hover { background-color: #fff1f2; }
-        .action-btn.complete { background-color: #16a34a; color: white; }
-        .action-btn.complete:hover { background-color: #15803d; }
+                                {/* 2. RIGHT: MAIN CONTENT */}
+                                <div className="card-content">
 
-        .empty-card { text-align: center; padding: 40px; background-color: white; border-radius: 12px; border: 1px dashed #cbd5e1; display: flex; flex-direction: column; align-items: center; }
-        .empty-title { color: #334155; margin: 0 0 8px 0; font-size: 1.1rem; }
-        .empty-text { color: #94a3b8; font-size: 0.9rem; margin: 0; }
-        .state-msg { text-align: center; padding: 40px; color: #94a3b8; }
+                                    {/* A. Top Row: User Info & Status */}
+                                    <div className="content-header">
+                                        <div className="user-profile">
+                                            <div className="avatar-circle">
+                                                {getInitials(otherName)}
+                                            </div>
+                                            <div className="user-text">
+                                                <h4 className="user-name">{otherName}</h4>
+                                                <span className="user-role">{isDoctor ? 'Patient' : 'Doctor'}</span>
+                                            </div>
+                                        </div>
+                                        <span className={`status-badge ${statusClass}`}>{appt.status}</span>
+                                    </div>
 
-        .link-btn { 
-          margin-top: 14px; 
-          color: #2563eb; 
-          background: transparent; 
-          border: 1px solid transparent; 
-          cursor: pointer; 
-          text-decoration: none; 
-          font-size: 0.9rem; 
-          font-weight: 600;
-          padding: 8px 16px;
-          border-radius: 6px;
-          transition: background 0.2s;
+                                    {/* B. Middle Row: Details */}
+                                    <div className="content-details">
+                                        <div className="detail-item">
+                                            <FiClock className="icon" />
+                                            <span>{appt.timeSlot}</span>
+                                        </div>
+                                        <div className="detail-item">
+                                            {appt.type === 'Online' ? <FiVideo className="icon" /> : <FiMapPin className="icon" />}
+                                            <span>{appt.type} Consultation</span>
+                                        </div>
+                                        <div className="detail-reason">
+                                            <span className="label">Reason:</span> {appt.reason}
+                                        </div>
+                                    </div>
+
+                                    {/* C. Bottom Row: ACTIONS */}
+                                    <div className="content-actions">
+                                        {/* 1. Message Button */}
+                                        {appt.status !== 'Cancelled' && (
+                                            <button
+                                                className="action-btn chat-btn"
+                                                onClick={() => handleStartChat(otherParty)}
+                                            >
+                                                <FiMessageSquare className="btn-icon" />
+                                                <span>Message</span>
+                                            </button>
+                                        )}
+
+                                        {/* 2. Video Button (UPDATED) */}
+                                        {appt.type === 'Online' && appt.status === 'Scheduled' && (
+                                            <button
+                                                onClick={() => handleJoinCall(appt)}
+                                                className="action-btn video-btn"
+                                            >
+                                                <FiVideo className="btn-icon" />
+                                                <span>Join Call</span>
+                                            </button>
+                                        )}
+
+                                        {/* 3. Doctor Actions */}
+                                        {isDoctor && appt.status === 'Scheduled' && (
+                                            <>
+                                                <button
+                                                    className="action-btn complete-btn"
+                                                    onClick={() => handleStatusUpdate(appt._id, 'Completed')}
+                                                >
+                                                    <FiCheckCircle className="btn-icon" />
+                                                    <span>Complete</span>
+                                                </button>
+                                                <button
+                                                    className="action-btn cancel-btn"
+                                                    onClick={() => handleStatusUpdate(appt._id, 'Cancelled')}
+                                                >
+                                                    <FiXCircle className="btn-icon" />
+                                                    <span>Cancel</span>
+                                                </button>
+                                            </>
+                                        )}
+
+                                        {/* 4. Patient Actions */}
+                                        {!isDoctor && appt.status === 'Scheduled' && (
+                                            <button
+                                                className="action-btn cancel-btn"
+                                                onClick={() => handleStatusUpdate(appt._id, 'Cancelled')}
+                                            >
+                                                <FiXCircle className="btn-icon" />
+                                                <span>Cancel</span>
+                                            </button>
+                                        )}
+                                    </div>
+
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {activeCallAppointment && (
+                <VideoCallWidget
+                    appointment={activeCallAppointment}
+                    onClose={() => setActiveCallAppointment(null)}
+                />
+            )}
+
+            <style>{`
+        .app-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #334155;
+            font-size: 14px;
         }
-        .link-btn:hover {
-            background-color: #eff6ff;
-            text-decoration: underline;
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 24px;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .page-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+            letter-spacing: -0.02em;
+        }
+        .page-subtitle {
+            margin: 4px 0 0 0;
+            color: #64748b;
+            font-size: 0.85rem;
         }
 
-        /* --- MOBILE RESPONSIVE --- */
-        @media (max-width: 768px) {
-            .app-container { padding: 10px; padding-bottom: 80px; }
+        .filter-wrapper {
+            display: flex;
+            background: #f1f5f9;
+            padding: 3px;
+            border-radius: 8px;
+            gap: 4px;
+        }
+        .filter-tab {
+            padding: 6px 14px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .filter-tab:hover {
+            color: #1e293b;
+            background: rgba(255,255,255,0.6);
+        }
+        .filter-tab.active {
+            background: #ffffff;
+            color: #2563eb;
+            font-weight: 600;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        }
 
-            .header-section { margin-bottom: 16px; gap: 12px; }
-            .page-title { font-size: 1.5rem; } 
-            .page-subtitle { font-size: 0.75rem; }
+        .cards-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
 
-            .controls-container { width: 100%; overflow: hidden; }
-            .filter-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
-            .filter-container::-webkit-scrollbar { display: none; }
-            .filter-btn { padding: 5px 12px; font-size: 0.75rem; flex-shrink: 0; }
+        .appt-card {
+            display: flex;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .appt-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);
+            border-color: #cbd5e1;
+        }
 
-            .appt-card { padding: 12px; } 
-            .card-content { flex-direction: column; gap: 12px; } 
+        .card-date-strip {
+            width: 80px;
+            background: #f8fafc;
+            border-right: 1px solid #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            flex-shrink: 0;
+            text-align: center;
+        }
+        .date-month {
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #64748b;
+            letter-spacing: 0.05em;
+            line-height: 1;
+        }
+        .date-day {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.1;
+            margin: 2px 0;
+        }
+        .date-year {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            line-height: 1;
+        }
+
+        .card-content {
+            flex: 1;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .avatar-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+        .user-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0;
+        }
+        .user-role {
+            font-size: 0.75rem;
+            color: #64748b;
+            display: block;
+        }
+        .status-badge {
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .status-badge.scheduled { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+        .status-badge.completed { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
+        .status-badge.cancelled { background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
+
+        .content-details {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f8fafc;
+        }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #475569;
+            font-size: 0.85rem;
+        }
+        .detail-item .icon {
+            color: #94a3b8;
+        }
+        .detail-reason {
+            background: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #475569;
+            font-size: 0.8rem;
+        }
+        .detail-reason .label {
+            font-weight: 600;
+            color: #334155;
+            margin-right: 4px;
+        }
+
+        .content-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+            line-height: 1;
+            white-space: nowrap;
+        }
+        .btn-icon {
+            font-size: 1rem;
+        }
+
+        .chat-btn {
+            background: #ffffff;
+            color: #475569;
+            border-color: #e2e8f0;
+        }
+        .chat-btn:hover {
+            background: #f8fafc;
+            color: #1e293b;
+            border-color: #cbd5e1;
+        }
+        
+        .video-btn {
+            background: #dbeafe; 
+            color: #1e40af;      
+            border-color: #bfdbfe;
+        }
+        .video-btn:hover {
+            background: #bfdbfe;
+            color: #1e3a8a;
+        }
+
+        .complete-btn {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #bbf7d0;
+        }
+        .complete-btn:hover {
+            background: #bbf7d0;
+        }
+
+        .cancel-btn {
+            background: #fff1f2;
+            color: #be123c;
+            border-color: #fecdd3;
+        }
+        .cancel-btn:hover {
+            background: #ffe4e6;
+        }
+
+        .empty-state {
+            display: flex;            
+            flex-direction: column;    
+            align-items: center;      
+            justify-content: center;   
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            border: 1px dashed #cbd5e1;
+            min-height: 300px;
+        }
+        .empty-icon { 
+            font-size: 3rem;           
+            color: #cbd5e1; 
+            margin-bottom: 16px;       
+        }
+        .empty-state h3 {
+            margin: 0 0 8px 0;
+            color: #1e293b;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .empty-state p {
+            margin: 0 0 24px 0;
+            color: #64748b;
+            max-width: 320px;
+            line-height: 1.5;
+        }
+
+        .loading-state { text-align: center; padding: 40px; color: #64748b; }
+        .spinner {
+            width: 24px; height: 24px; border: 2px solid #e2e8f0; 
+            border-top-color: #2563eb; border-radius: 50%; 
+            animation: spin 0.8s linear infinite; margin: 0 auto 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .link-btn {
+            background: none; border: none; 
+            color: #2563eb; font-weight: 600; cursor: pointer;
+            padding: 0;
+            font-size: 0.9rem;
+        }
+        .link-btn:hover { text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            .app-container { padding: 12px; padding-bottom: 80px; }
+            .header-section { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .filter-wrapper { width: 100%; overflow-x: auto; }
             
-            .top-section { width: 100%; gap: 10px; }
+            .appt-card { flex-direction: column; }
             
-            .date-box { width: 48px; height: 48px; border-radius: 8px; }
-            .date-day { font-size: 1.1rem; }
-            .date-month { font-size: 0.6rem; }
-
-            .person-name { font-size: 0.95rem; margin-bottom: 4px; }
-            .meta-row { font-size: 0.75rem; gap: 8px; margin-bottom: 4px; }
-            .reason-text { font-size: 0.75rem; padding: 5px; }
-            .video-link { font-size: 0.75rem; margin-top: 6px; width: fit-content; }
-
-            .action-section { 
-                width: 100%; 
+            .card-date-strip {
+                width: 100%;
                 flex-direction: row; 
-                justify-content: space-between; 
-                align-items: center; 
-                padding-top: 10px; 
-                border-top: 1px solid #f1f5f9; 
+                align-items: baseline; 
+                justify-content: flex-start;
+                gap: 8px;
+                padding: 10px 14px; 
+                border-right: none;
+                border-bottom: 1px solid #f1f5f9;
+                background: #f8fafc;
+                text-align: left;
+            }
+            .date-day { 
+                font-size: 1.1rem; 
+                line-height: 1; 
+                margin: 0; 
+            }
+            .date-month { font-size: 0.75rem; }
+            .date-year { font-size: 0.75rem; }
+
+            .card-content { 
+                padding: 14px; 
+                gap: 12px; 
             }
             
-            .btn-group { 
-                flex-direction: row; 
-                width: auto; 
-                gap: 8px; 
+            .content-details {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
             }
-            .action-btn { 
-                width: auto; 
-                padding: 6px 12px; 
-                font-size: 0.7rem; 
+
+            .content-actions {
+                flex-direction: row; 
+                flex-wrap: wrap;    
+                width: 100%;
+                gap: 8px;
+            }
+            
+            .action-btn {
+                flex: 1 1 45%; 
+                justify-content: center;
+                padding: 10px;
+                min-width: 120px; 
             }
         }
       `}</style>
-    </div>
-  );
+        </div>
+    );
 };
 
 export default MyAppointments;

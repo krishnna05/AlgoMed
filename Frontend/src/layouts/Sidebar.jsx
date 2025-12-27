@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   FiGrid, FiUsers, FiCalendar, FiActivity, 
-  FiSettings, FiCpu, FiX 
+  FiSettings, FiCpu, FiX, FiMessageSquare // <--- Added FiMessageSquare
 } from 'react-icons/fi';
 
 const Sidebar = ({ isOpen, onClose, isMobile }) => {
@@ -149,17 +149,19 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
   if (user?.role === 'patient') {
     menuItems = [
       { path: '/patient', label: 'Dashboard', icon: <FiGrid /> },
+      { path: '/patient/messages', label: 'Messages', icon: <FiMessageSquare /> }, // <--- ADDED
       { path: '/patient/ai', label: 'AlgoMed AI', icon: <FiCpu /> },
       { path: '/patient/find-doctors', label: 'Find Doctors', icon: <FiUsers /> },
-      { path: '/patient/appointments', label: 'My Appointments', icon: <FiCalendar /> },
+      { path: '/patient/appointments', label: 'Appointments', icon: <FiCalendar /> },
       { path: '/patient/profile', label: 'Medical Profile', icon: <FiActivity /> },
     ];
   } else if (user?.role === 'doctor') {
     menuItems = [
       { path: '/doctor', label: 'Overview', icon: <FiGrid /> },
+      { path: '/doctor/messages', label: 'Messages', icon: <FiMessageSquare /> }, // <--- ADDED
       { path: '/doctor/ai', label: 'AlgoMed AI', icon: <FiCpu /> },
       { path: '/doctor/appointments', label: 'Schedule', icon: <FiCalendar /> },
-      { path: '/doctor/profile', label: 'Profile & Settings', icon: <FiSettings /> },
+      { path: '/doctor/profile', label: 'Profile Settings', icon: <FiSettings /> },
     ];
   }
 

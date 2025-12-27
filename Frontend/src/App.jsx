@@ -17,6 +17,7 @@ import MyAppointments from './pages/MyAppointments';
 import DoctorProfile from './pages/DoctorProfile';
 import PatientProfile from './pages/PatientProfile';
 import AIChat from './pages/AIChat'; 
+import RealtimeChat from './pages/RealtimeChat'; // <--- IMPORT THIS
 
 // --- 1. Root Route Wrapper ---
 const RootRoute = () => {
@@ -36,7 +37,7 @@ const RootRoute = () => {
   return <LandingPage />;
 };
 
-// --- 2. Public Only Route Wrapper (New) ---
+// --- 2. Public Only Route Wrapper ---
 const PublicOnlyRoute = ({ children }) => {
   const { user } = useAuth();
   if (user) {
@@ -86,19 +87,23 @@ const App = () => {
             } 
           />
           
+          {/* DOCTOR ROUTES */}
           <Route element={<PrivateRoute allowedRoles={['doctor']} />}>
             <Route element={<DashboardLayout />}>
               <Route path="/doctor" element={<DoctorDashboard />} />
               <Route path="/doctor/ai" element={<AIChat />} />
+              <Route path="/doctor/messages" element={<RealtimeChat />} /> {/* <--- ADDED */}
               <Route path="/doctor/appointments" element={<MyAppointments />} />
               <Route path="/doctor/profile" element={<DoctorProfile />} />
             </Route>
           </Route>
 
+          {/* PATIENT ROUTES */}
           <Route element={<PrivateRoute allowedRoles={['patient']} />}>
             <Route element={<DashboardLayout />}>
               <Route path="/patient" element={<PatientDashboard />} />
               <Route path="/patient/ai" element={<AIChat />} />
+              <Route path="/patient/messages" element={<RealtimeChat />} /> {/* <--- ADDED */}
               <Route path="/patient/find-doctors" element={<FindDoctors />} />
               <Route path="/patient/appointments" element={<MyAppointments />} />
               <Route path="/patient/profile" element={<PatientProfile />} />

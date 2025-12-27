@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiActivity, FiCpu, FiShield, FiCheckCircle, FiArrowRight, FiMenu, FiX, FiChevronLeft, FiChevronRight, FiMaximize, FiTwitter, FiLinkedin, FiGithub } from 'react-icons/fi';
+import { FiActivity, FiCpu, FiShield, FiCheckCircle, FiArrowRight, FiMenu, FiX, FiChevronLeft, FiChevronRight, FiMaximize, FiTwitter, FiLinkedin, FiGithub, FiVideo, FiMessageSquare } from 'react-icons/fi';
 import { BsStars } from 'react-icons/bs';
 
 // --- IMAGE SETUP ---
@@ -8,6 +8,10 @@ import dashboardImage1 from '../assets/dashboard-left.png';
 import dashboardImage2 from '../assets/dashboard-right.png';
 import algomed_ai from '../assets/algomed-ai.png';
 import find_doctors from '../assets/find-doctors.png';
+import appScreenshot from '../assets/algo-chat.png';
+
+import dr_admin_dashboard from '../assets/algo-doctor.jpg';
+import dr_admin_dashboard2 from '../assets/algo-health.jpg';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -24,6 +28,11 @@ const LandingPage = () => {
   const featureSlides = [
     { src: algomed_ai, label: "Algomed - AI Chat" },
     { src: find_doctors, label: "Find Doctors" }
+  ];
+
+  const chatSlides = [
+    { src: dr_admin_dashboard, label: "Algohealth" }, 
+    { src: dr_admin_dashboard2, label: "Dr. Admin Dashboard" }, 
   ];
 
   const ProductScreenshotPlaceholder = ({ autoSlide = true, slides = [] }) => {
@@ -325,6 +334,89 @@ const LandingPage = () => {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* --- Real-time Communication --- */}
+        <section className="py-24 bg-blue-50/50 relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid md:grid-cols-2 gap-16 items-center">
+              {/* Text Side */}
+              <div className="order-2 md:order-1">
+                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-blue-100 text-blue-600 text-xs font-bold uppercase tracking-wide mb-6 shadow-sm">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    </span>
+                    Telemedicine Suite
+                 </div>
+                 <h2 className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
+                   Connect beyond the clinic walls.
+                 </h2>
+                 <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+                   Experience a unified platform where high-definition video calls and secure instant messaging meet AI-powered documentation.
+                 </p>
+                 
+                 <div className="space-y-6">
+                    <div className="flex items-start gap-4">
+                       <div className="p-3 bg-white rounded-lg border border-slate-100 shadow-md text-blue-600">
+                          <FiVideo size={24} />
+                       </div>
+                       <div>
+                          <h4 className="text-lg font-bold text-slate-900">HD Video Consultations</h4>
+                          <p className="text-slate-500 mt-1">Crystal clear, low-latency video built for medical examinations. Screen share diagnostic results in real-time.</p>
+                       </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                       <div className="p-3 bg-white rounded-lg border border-slate-100 shadow-md text-cyan-600">
+                          <FiMessageSquare size={24} />
+                       </div>
+                       <div>
+                          <h4 className="text-lg font-bold text-slate-900">Secure Patient Chat</h4>
+                          <p className="text-slate-500 mt-1">Asynchronous messaging for follow-ups, prescription refills, and quick questions. Fully encrypted.</p>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+
+              {/* Visual Side using existing Chat Slides */}
+              <div className="order-1 md:order-2 relative">
+                 <div className="absolute -inset-4 bg-gradient-to-tr from-blue-200 to-cyan-200 rounded-full blur-3xl opacity-40"></div>
+                 <div className="relative rounded-2xl shadow-2xl border border-slate-200 bg-white overflow-hidden aspect-square md:aspect-[4/5]">
+                    <ProductScreenshotPlaceholder slides={chatSlides} />
+                    
+                    {/* Floating Badge */}
+                    <div className="absolute bottom-8 left-8 bg-white/90 backdrop-blur p-4 rounded-xl border border-slate-100 shadow-xl max-w-[240px] z-20 animate-bounce">
+                       <div className="flex items-center gap-3 mb-2">
+                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                          <span className="text-xs font-bold text-slate-500 uppercase">Incoming Message</span>
+                       </div>
+                       <p className="text-sm font-medium text-slate-800">"Dr. Pratibha, the AI just flagged a potential interaction with the new prescription."</p>
+                    </div>
+                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* --- CLEAN DASHBOARD SECTION --- */}
+        <section className="py-20 bg-white border-t border-slate-100">
+           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+             <h2 className="text-3xl font-extrabold text-slate-900 mb-12">One Dashboard to Rule Them All</h2>
+             
+             <div className="relative max-w-6xl mx-auto group">
+               {/* Decorative background glow */}
+               <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
+               
+               {/* Main Image Container */}
+               <div className="relative rounded-xl shadow-2xl border border-slate-200 bg-white overflow-hidden">
+                  <img 
+                    src={appScreenshot} 
+                    alt="AlgoMed Dashboard Interface" 
+                    className="w-full h-auto"
+                  />
+               </div>
+             </div>
+           </div>
         </section>
 
         {/* --- CTA --- */}

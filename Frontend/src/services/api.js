@@ -139,4 +139,19 @@ export const getDoctorAnalytics = async () => {
   return response.data;
 };
 
+// 7. Real-time Chat Integration
+export const getFirebaseToken = async () => {
+  const response = await api.get('/realtime-chat/token');
+  return response.data;
+};
+
+export const uploadChatFile = async (formData) => {
+  const response = await api.post('/realtime-chat/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
 export default api;

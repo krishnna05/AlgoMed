@@ -7,7 +7,6 @@ import {
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-// Suggestion Cards Data
 const SUGGESTED_CARDS = [
     { icon: <FiActivity />, text: "How does sleep affect health?", category: "Wellness" },
     { icon: <FiSearch />, text: "Explain this medical report", category: "Analysis" },
@@ -17,7 +16,6 @@ const SUGGESTED_CARDS = [
 const AIChat = () => {
     const { user } = useAuth();
     
-    // --- State Management ---
     const [threads, setThreads] = useState([]);
     const [activeThreadId, setActiveThreadId] = useState(null);
     const [messages, setMessages] = useState([]);
