@@ -18,19 +18,17 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please add a password'],
         minlength: 6,
-        select: false // Do not return password by default
+        select: false 
     },
     role: {
         type: String,
         enum: ['patient', 'doctor', 'admin'],
         default: 'patient'
     },
-
     isVerified: {
         type: Boolean,
         default: false 
     },
-    
     phone: {
         type: String,
         default: ""
@@ -41,7 +39,8 @@ const userSchema = new mongoose.Schema({
         default: ''
     }
 }, {
-    timestamps: true // Automatically creates createdAt and updatedAt fields
+    timestamps: true 
 });
 
-module.exports = mongoose.models.user || mongoose.model('user', userSchema);
+// FIX: Changed 'user' to 'User' (Capital U) to match references in other files
+module.exports = mongoose.models.User || mongoose.model('User', userSchema);

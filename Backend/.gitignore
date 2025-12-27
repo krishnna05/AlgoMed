@@ -20,3 +20,6 @@ build/
 .DS_Store
 .vscode/
 .idea/
+
+# Security
+config/serviceAccountKey.json
