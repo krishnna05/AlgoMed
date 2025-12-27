@@ -42,5 +42,4 @@ const userSchema = new mongoose.Schema({
     timestamps: true 
 });
 
-// FIX: Changed 'user' to 'User' (Capital U) to match references in other files
 module.exports = mongoose.models.User || mongoose.model('User', userSchema);
