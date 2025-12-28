@@ -450,7 +450,13 @@ const DoctorDashboard = () => {
                 .analytics-metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
                 .analytics-charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
                 
-                .greeting-text { font-size: 1.5rem; white-space: nowrap; }
+                /* FIXED: Removed nowrap and added wrapping logic */
+                .greeting-text { 
+                    font-size: 1.5rem; 
+                    white-space: normal;
+                    word-break: break-word;
+                    line-height: 1.3;
+                }
 
                 .badge-row::-webkit-scrollbar { display: none; }
                 .badge-row { -ms-overflow-style: none; scrollbar-width: none; }
@@ -463,13 +469,15 @@ const DoctorDashboard = () => {
                 @media (max-width: 768px) {
                     .main-container { 
                         padding: 16px 12px; 
-                        zoom: 0.9;
                     }
 
                     .header-container { flex-direction: column; }
                     .header-container > div { width: 100%; justify-content: space-between; }
  
-                    .greeting-text { font-size: 1.5rem; }
+                    /* FIXED: Adjusted font size for mobile */
+                    .greeting-text { 
+                        font-size: 1.25rem; 
+                    }
 
                     .header-actions { width: 100%; margin-top: 16px; }
                     .view-switcher { width: 100%; display: flex; }

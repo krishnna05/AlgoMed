@@ -4,10 +4,9 @@ import {
   registerPatient, 
   registerDoctor, 
   logoutUser,
-  getFirebaseToken // <--- Import this
+  getFirebaseToken 
 } from "../services/api";
 
-// Firebase Imports
 import { auth } from "../firebase";
 import { signInWithCustomToken, signOut as firebaseSignOut } from "firebase/auth";
 
@@ -21,7 +20,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Helper: Sign into Firebase using the backend token
   const connectToFirebase = async () => {
     try {
       const data = await getFirebaseToken();
@@ -42,7 +40,6 @@ export const AuthProvider = ({ children }) => {
       if (storedUser && storedToken) {
         try {
           setUser(JSON.parse(storedUser));
-          // If we have a user, ensure we are connected to Firebase
           await connectToFirebase();
         } catch (error) {
           console.error("Failed to parse user data", error);
@@ -65,7 +62,6 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("user", JSON.stringify(userData));
       localStorage.setItem("token", userData.token);
       
-      // Connect to Firebase after successful login
       await connectToFirebase();
 
       return { success: true };
@@ -94,7 +90,6 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("user", JSON.stringify(newUser));
       localStorage.setItem("token", newUser.token);
 
-      // Connect to Firebase after successful signup
       await connectToFirebase();
 
       return { success: true };
@@ -110,7 +105,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
         await logoutUser(); 
-        await firebaseSignOut(auth); // Sign out of Firebase
+        await firebaseSignOut(auth); 
     } catch (error) {
         console.error("Logout error", error);
     }
