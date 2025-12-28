@@ -60,7 +60,8 @@ const registerDoctor = async (req, res, next) => {
     try {
         const {
             name, email, password, gender, phone,
-            specialization, experience, medicalRegNumber, clinicName, clinicAddress
+            specialization, experience, medicalRegNumber, clinicName, clinicAddress,
+            qualifications
         } = req.body;
 
         const userExists = await User.findOne({ email });
@@ -80,7 +81,7 @@ const registerDoctor = async (req, res, next) => {
             experience: experience || 0,
             clinicAddress: clinicAddress || 'Not Provided',
             about: `Practicing at ${clinicName}`,
-            qualifications: [],
+            qualifications: qualifications || ['MBBS'], 
             isApproved: false
         });
 
