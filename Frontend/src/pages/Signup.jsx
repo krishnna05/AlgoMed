@@ -43,7 +43,9 @@ const Signup = () => {
 
     try {
       const payload = { ...formData, role };
-      const result = await signup(payload);
+      
+      // --- FIX IS HERE: Pass 'role' as the second argument ---
+      const result = await signup(payload, role);
 
       if (result.success) {
         navigate(role === 'doctor' ? '/doctor' : '/patient');

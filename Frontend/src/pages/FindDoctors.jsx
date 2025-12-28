@@ -7,25 +7,25 @@ import {
 
 const DEMO_DOCTORS = [
     {
-        _id: 'd1', name: 'Dr. Sarah Jenkins', specialization: 'Cardiologist', experience: 12,
+        _id: 'd1', name: 'Sara Chauhan', specialization: 'Cardiologist', experience: 12,
         qualifications: ['MBBS', 'MD', 'FACC'], fees: 1500, clinicAddress: 'Heart Care Center, NYC',
         rating: 4.9, reviewCount: 120, nextAvailable: 'Today, 2:00 PM',
         availableSlots: [{ day: 'Monday', startTime: '09:00', endTime: '17:00' }]
     },
     {
-        _id: 'd2', name: 'Dr. Raj Malhotra', specialization: 'Dermatologist', experience: 8,
+        _id: 'd2', name: 'Raghav Malhotra', specialization: 'Dermatologist', experience: 8,
         qualifications: ['MBBS', 'DDVL'], fees: 800, clinicAddress: 'Skin & Glow, Mumbai',
         rating: 4.7, reviewCount: 85, nextAvailable: 'Tomorrow, 10:00 AM',
         availableSlots: [{ day: 'Tuesday', startTime: '10:00', endTime: '14:00' }]
     },
     {
-        _id: 'd3', name: 'Dr. Emily Chen', specialization: 'Pediatrician', experience: 15,
+        _id: 'd3', name: 'Saumya Upadhyay', specialization: 'Pediatrician', experience: 15,
         qualifications: ['MBBS', 'MD'], fees: 1200, clinicAddress: 'Little Steps, SF',
         rating: 4.8, reviewCount: 210, nextAvailable: 'Available Now',
         availableSlots: [{ day: 'Monday', startTime: '08:00', endTime: '12:00' }]
     },
     {
-        _id: 'd4', name: 'Dr. Alan Grant', specialization: 'General Physician', experience: 20,
+        _id: 'd4', name: 'Kriti Menon', specialization: 'General Physician', experience: 20,
         qualifications: ['MBBS', 'MD'], fees: 600, clinicAddress: 'City Health, Chicago',
         rating: 4.6, reviewCount: 95, nextAvailable: 'Today, 4:30 PM',
         availableSlots: [{ day: 'Monday', startTime: '09:00', endTime: '20:00' }]
@@ -215,7 +215,7 @@ const FindDoctors = () => {
                             <div className="card-head">
                                 <div className="avatar">{(doc.name || 'D').charAt(0)}</div>
                                 <div>
-                                    <h3 className="doc-name">{doc.name}</h3>
+                                    <h3 className="doc-name"> Dr. {doc.name}</h3>
                                     <div className="doc-spec">{doc.specialization}</div>
                                     <div className="rating-row">
                                         <FiStar fill="#f59e0b" color="#f59e0b" size={12}/> 
