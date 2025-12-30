@@ -188,11 +188,8 @@ http://localhost:5000
 
 ## 📌 Future Enhancements
 
-* Video consultation using WebRTC
 * Online payment gateway
 * AI-based symptom checker
-* Medical report upload & analysis
-* Prescription management
 * Push notifications
 
 ---
