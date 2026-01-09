@@ -1,59 +1,80 @@
-# 🏥 AlgoMed – AI-Powered Telemedicine Platform
+# AlgoMed - AI-Powered Telemedicine & Clinical Assistant Platform
 
-AlgoMed is a **full-stack MERN-based telemedicine web application** designed to bridge the gap between patients and doctors through secure digital healthcare services.
-It enables **online consultations, appointment management, real-time communication**, and **AI-assisted healthcare support** in a modern SaaS-style interface.
+![React](https://img.shields.io/badge/React-19.0-61DAFB?logo=react&style=for-the-badge)
+![Node.js](https://img.shields.io/badge/Node.js-18.0-339933?logo=node.js&style=for-the-badge)
+![MongoDB](https://img.shields.io/badge/MongoDB-6.0-47A248?logo=mongodb&style=for-the-badge)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-06B6D4?logo=tailwindcss&style=for-the-badge)
+![Google Gemini](https://img.shields.io/badge/AI-Google_Gemini-8E75B2?style=for-the-badge)
+![Socket.io](https://img.shields.io/badge/Socket.io-Realtime-010101?logo=socket.io&style=for-the-badge)
 
----
 
-## 🚀 Features
+## 🏥 Overview
 
-### 👤 User Management
+**AlgoMed** is a comprehensive healthcare platform designed to bridge the gap between patients and doctors using modern web technologies and Artificial Intelligence. Beyond standard appointment booking, AlgoMed acts as a "Second Brain" for healthcare providers.
 
-* Patient & Doctor role-based authentication
-* Secure JWT-based login & signup
-* Profile creation and management
+It features **Real-time Video Consultations** (custom WebRTC implementation), **Instant Messaging**, and an **AI Clinical Assistant** that automatically generates structured **SOAP notes** (Subjective, Objective, Assessment, Plan) from consultation transcripts, significantly reducing administrative burnout for doctors.
+
+
+## ✨ Key Features
+
+### 🤖 AI-Driven Healthcare (Powered by Google Gemini)
+* **Automated SOAP Notes:** Analyzes raw doctor notes or consultation transcripts to generate professional, structured clinical documentation (JSON format) with ICD-10 suggestions.
+* **AI Chat Assistant:** A context-aware chatbot for patients to analyze medical reports, check symptoms, and get wellness advice.
+* **Medical Report Analysis:** Users can upload images/PDFs of reports for AI-driven summarization and explanation.
+
+### 📹 Real-Time Communication
+* **HD Video Telemedicine:** Integrated video calling using **WebRTC** signaling via Socket.io. Supports peer-to-peer connection establishment (Offer/Answer/ICE Candidates).
+* **Live Chat:** Real-time messaging between doctors and patients with persistent history stored in MongoDB.
 
 ### 🩺 Doctor Dashboard
+* **Patient Snapshot:** Quick view of patient history and upcoming appointments.
+* **Appointment Management:** Accept, reject, or reschedule appointments.
+* **Profile Management:** customizable professional profiles visible to patients.
 
-* Manage availability & appointments
-* View patient history
-* Professional profile with qualifications, experience & fees
+### 👤 Patient Portal
+* **Find Doctors:** Search and filter doctors by specialization.
+* **Appointment Booking:** Seamless booking interface.
+* **Medical History:** Secure access to past appointments and chat history.
 
-### 🧑‍⚕️ Patient Dashboard
+### 🔐 Security & Architecture
+* **Role-Based Access Control (RBAC):** Middleware protected routes ensuring strict separation between Patient, Doctor, and Admin scopes.
+* **JWT Authentication:** Secure stateless authentication with HttpOnly cookies (where applicable) and local storage.
 
-* Book appointments with doctors
-* View upcoming & past consultations
-* Health insights and appointment status tracking
 
-### 💬 Communication
+## 🛠️ Tech Stack
 
-* Real-time chat between doctor and patient
-* Planned support for video consultations (WebRTC-ready)
+### Frontend
+* **Framework:** React 19 (Vite)
+* **Styling:** Tailwind CSS v4, PostCSS
+* **State Management:** React Context API (AuthContext)
+* **Routing:** React Router DOM v7
+* **HTTP Client:** Axios
+* **Real-time Client:** Socket.io-client
 
-### 🤖 AI Assistance
+### Backend
+* **Runtime:** Node.js
+* **Framework:** Express.js
+* **Database:** MongoDB (via Mongoose)
+* **AI Engine:** Google Generative AI SDK (Gemini)
+* **Real-time Server:** Socket.io
+* **Authentication:** JSON Web Tokens (JWT), bcryptjs
+* **File Storage:** Cloudinary (report analysis)
 
-* AI-powered health assistant for guidance and support
-* Designed for future symptom analysis & report summarization
-
-### 🔐 Security
-
-* Role-based access control
-* Protected routes
-* Secure password hashing
-
----
 
 ## 📸 Screenshots
 
 ### 🏠 Landing Page
 ![Landing Page](./screenshots/landing.png)
 
-### 🔐 Authentication (Login / Signup)
+### 🔐 Authentication (Login)
 ![Auth Page](./screenshots/auth1.png)
+
+### 🔐 Authentication (Signup)
 ![Auth Page](./screenshots/auth2.png)
 
 ### 🧑‍⚕️ Doctor Dashboard
 ![Doctor Dashboard](./screenshots/doctor-dashboard1.png)
+
 ![Doctor Dashboard](./screenshots/doctor-dashboard2.png)
 
 ### 🧑‍⚕️ Patient Dashboard
@@ -65,35 +86,14 @@ It enables **online consultations, appointment management, real-time communicati
 ### 💬 Real-Time Chat
 ![Chat](./screenshots/chat.png)
 
+### 💬 Real-Time Video Call
+![Video Call](./screenshots/Video-call.png)
+
 ### 💬 AlgoMed AI
 ![Chat](./screenshots/ai.png)
 
 ------
 
-## 🛠 Tech Stack
-
-### Frontend
-
-* React.js
-* Vite
-* Bootstrap / Custom CSS
-* React Icons
-* Recharts (Health Analytics)
-
-### Backend
-
-* Node.js
-* Express.js
-* MongoDB
-* Mongoose
-* JWT Authentication
-* Bcrypt.js
-
-### Database
-
-* MongoDB Atlas
-
----
 
 ## 📁 Project Structure
 
